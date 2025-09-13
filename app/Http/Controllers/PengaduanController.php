@@ -52,4 +52,11 @@ class PengaduanController extends Controller
 
         return redirect()->back()->with('success', 'Pengaduan berhasil dikirim.');
     }
+
+    public function show(Pengaduan $pengaduan)
+    {
+        $pengaduan->load(['verifikasi.user', 'kategori']);
+
+        return view('layouts.admin.layanan.e-aduan.pengaduan-detail', compact('pengaduan'));
+    }
 }

@@ -193,6 +193,7 @@ Route::middleware(['auth', 'role:superadmin|seknag|staff-tu'])->group(function (
 
     // Pengaduan Admin
     Route::get('/admin/e-aduan', [PengaduanController::class, 'index'])->name('pengaduan.index');
+    Route::get('/admin/e-aduan/{pengaduan}', [PengaduanController::class, 'show'])->name('pengaduan.show');
 
     // Home
     Route::get('/home', [HomeController::class, 'index'])->name('home');

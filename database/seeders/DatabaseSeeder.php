@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             KontenSeeder::class,
             JenisSuratSeeder::class,
             UserVerifiedSeeder::class,
+            KategoriPengaduanSeeder::class,
         ]);
     }
 }

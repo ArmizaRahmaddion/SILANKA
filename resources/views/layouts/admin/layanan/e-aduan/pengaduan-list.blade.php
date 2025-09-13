@@ -38,11 +38,20 @@
                                                 @if ($item->file)
                                                     <a href="{{ asset('storage/' . $item->file) }}" target="_blank"
                                                         class="btn btn-sm btn-primary">
-                                                        Lihat File
+                                                        <i class="fas fa-file-alt me-1"></i>Lihat File
                                                     </a>
                                                 @else
                                                     <span class="text-muted">Tidak Ada</span>
                                                 @endif
+                                            </td>
+                                            <td>
+                                                <div class="d-flex gap-1">
+                                                    <a href="{{ route('pengaduan.show', $item->id) }}"
+                                                        class="btn btn-sm btn-info" data-bs-toggle="tooltip"
+                                                        title="Lihat Detail">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
