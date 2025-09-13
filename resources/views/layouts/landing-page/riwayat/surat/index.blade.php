@@ -1,0 +1,327 @@
+@extends('layouts.landing-page.layout')
+@section('content')
+    <!-- Page Title -->
+    <div class="page-title">
+        <div class="heading">
+            <div class="container">
+                <div class="row d-flex justify-content-center text-center">
+                    <div class="col-lg-8">
+                        <h1>RIWAYAT PENGAJUAN SURAT</h1>
+                        <p class="mb-0">Pantau status dan riwayat pengajuan surat Anda dengan mudah.
+                            Lihat detail proses dari setiap tahapan pengajuan surat yang telah Anda ajukan.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <nav class="breadcrumbs">
+            <div class="container">
+                <ol>
+                    <li><a href="#">Beranda</a></li>
+                    <li class="current">Riwayat Surat</li>
+                </ol>
+            </div>
+        </nav>
+    </div><!-- End Page Title -->
+
+    <section id="riwayat-surat" class="py-5 bg-light">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div
+                            class="card-header bg-white d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                            <div>
+                                <h5 class="mb-1 fw-bold">
+                                    <i class="bi bi-files me-2 text-primary"></i> Riwayat Pengajuan Surat
+                                </h5>
+                                <p class="mb-0 text-muted small">
+                                    Lacak status, detail, dan progres setiap surat yang Anda ajukan.
+                                </p>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                    <input type="text" id="searchRiwayat" class="form-control"
+                                        placeholder="Cari nomor / jenis / status...">
+                                </div>
+                                <div class="d-flex align-items-center gap-2 small flex-wrap">
+                                    <span class="badge bg-success">Selesai</span>
+                                    <span class="badge bg-warning text-dark">Sedang Diproses</span>
+                                    <span class="badge bg-secondary">Menunggu</span>
+                                    <span class="badge bg-danger">Ditolak</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table id="riwayatSuratTable" class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="text-center" style="width:60px;">No.</th>
+                                            <th style="min-width:160px;">Nomor Surat</th>
+                                            <th style="min-width:200px;">Jenis Surat</th>
+                                            <th style="min-width:140px;">Tanggal Permintaan</th>
+                                            <th style="min-width:120px;">Status</th>
+                                            <th style="min-width:140px;">Detail</th>
+                                            <th style="min-width:120px;">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $statusBadgeMap = [
+                                                'Selesai' => 'success',
+                                                'Sedang Diproses' => 'warning',
+                                                'Menunggu' => 'secondary',
+                                                'Ditolak' => 'danger',
+                                                'Dibatalkan' => 'dark',
+                                            ];
+                                        @endphp
+                                        @forelse ($riwayatSurat as $surat)
+                                            @php
+                                                $status = $surat->status;
+                                                $badgeClass = $statusBadgeMap[$status] ?? 'secondary';
+                                                $nomorSurat = optional($surat->suratTerbit->first())->nomor_surat;
+                                            @endphp
+                                            <tr class="data-row">
+                                                <td class="text-center fw-semibold">{{ $loop->iteration }}</td>
+                                                <td class="fw-medium">
+                                                    {{ $nomorSurat ?? '—' }}
+                                                </td>
+                                                <td>{{ $surat->jenisSurat->nama_surat ?? '—' }}</td>
+                                                <td>
+                                                    <span class="text-nowrap">
+                                                        {{ $surat->tanggal_permintaan->format('d/m/Y') }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-{{ $badgeClass }}">
+                                                        {{ $status }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <button type="button"
+                                                        class="btn btn-outline-info btn-sm px-3 d-inline-flex align-items-center gap-1"
+                                                        data-bs-toggle="modal" data-bs-target="#modalDetail"
+                                                        data-jenis="{{ $surat->jenisSurat->nama_surat ?? '-' }}"
+                                                        data-tanggal="{{ $surat->tanggal_permintaan->translatedFormat('d F Y') }}"
+                                                        data-nomor="{{ $nomorSurat ?? '-' }}"
+                                                        data-status="{{ $status }}">
+                                                        <i class="bi bi-eye"></i><span>Detail</span>
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <button type="button"
+                                                        class="btn btn-primary btn-sm px-3 d-inline-flex align-items-center gap-1"
+                                                        data-bs-toggle="modal" data-bs-target="#modalRiwayat"
+                                                        data-bagian="{{ $surat->bagian_saat_ini ?? 'Tata Usaha' }}"
+                                                        data-status="{{ $status }}"
+                                                        data-tanggal="{{ $surat->tanggal_permintaan->translatedFormat('d F Y') }}">
+                                                        <i class="bi bi-clock-history"></i><span>Riwayat</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr id="emptyStateRow">
+                                                <td colspan="7" class="text-center py-5">
+                                                    <div class="text-muted">
+                                                        <i class="bi bi-inbox display-6 d-block mb-2"></i>
+                                                        Belum ada riwayat pengajuan surat.
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        @if (method_exists($riwayatSurat, 'links'))
+                            <div class="card-footer bg-white py-3">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <small class="text-muted">
+                                        Total:
+                                        {{ method_exists($riwayatSurat, 'total') ? $riwayatSurat->total() : $riwayatSurat->count() }}
+                                        data
+                                    </small>
+                                    {{ $riwayatSurat->links() }}
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Detail (Dinamis) -->
+    <div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detail Surat</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Jenis Surat:</strong> <span id="jenisSurat"></span></p>
+                    <p><strong>Tanggal Permintaan:</strong> <span id="tanggalPermintaan"></span></p>
+                    <p><strong>Nomor Surat:</strong> <span id="nomorSurat"></span></p>
+                    <p><strong>Status Saat Ini:</strong> <span id="statusSurat"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Riwayat (Dinamis) -->
+    <div class="modal fade" id="modalRiwayat" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Riwayat Status Surat</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Bagian</th>
+                                <th>Status</th>
+                                <th>Keterangan</th>
+                                <th>Tanggal Proses</th>
+                            </tr>
+                        </thead>
+                        <tbody id="riwayatStatusBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const bagianList = ['Tata Usaha', 'Sekretaris Nagari', 'Wali Nagari'];
+
+        const modalDetail = document.getElementById('modalDetail');
+        modalDetail.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            document.getElementById('jenisSurat').textContent = button.getAttribute('data-jenis');
+            document.getElementById('tanggalPermintaan').textContent = button.getAttribute('data-tanggal');
+            document.getElementById('nomorSurat').textContent = button.getAttribute('data-nomor');
+            document.getElementById('statusSurat').textContent = button.getAttribute('data-status');
+        });
+
+        const modalRiwayat = document.getElementById('modalRiwayat');
+        modalRiwayat.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const bagianSaatIni = button.getAttribute('data-bagian');
+            const tanggalPermintaan = button.getAttribute('data-tanggal');
+            const statusSurat = button.closest('tr').querySelector('[data-status]').getAttribute('data-status');
+            const tbody = document.getElementById('riwayatStatusBody');
+            tbody.innerHTML = '';
+
+            bagianList.forEach((bagian, index) => {
+                let status = 'Menunggu';
+
+                // Jika surat sudah selesai, maka semua bagian selesai
+                if (statusSurat === 'Selesai') {
+                    status = 'Selesai';
+                } else if (bagian === bagianSaatIni) {
+                    status = 'Sedang Diproses';
+                } else if (index < bagianList.indexOf(bagianSaatIni)) {
+                    status = 'Selesai';
+                }
+
+                let keterangan = {
+                    'Selesai': 'Proses telah selesai',
+                    'Sedang Diproses': 'Sedang dalam proses verifikasi',
+                    'Menunggu': 'Menunggu proses sebelumnya selesai'
+                } [status];
+
+                let badgeClass = {
+                    'Selesai': 'success',
+                    'Sedang Diproses': 'warning',
+                    'Menunggu': 'secondary'
+                } [status];
+
+                const row = `<tr>
+            <td>${index + 1}</td>
+            <td>${bagian}</td>
+            <td><span class="badge bg-${badgeClass}">${status}</span></td>
+            <td>${keterangan}</td>
+            <td>${status === 'Selesai' ? tanggalPermintaan : '-'}</td>
+        </tr>`;
+
+                tbody.insertAdjacentHTML('beforeend', row);
+            });
+        });
+    </script>
+
+    <style>
+        #riwayatSuratTable tbody tr {
+            transition: background-color .15s ease;
+        }
+
+        #riwayatSuratTable tbody tr:hover {
+            background-color: #f8fafd;
+        }
+
+        #riwayat-surat .form-control:focus {
+            box-shadow: 0 0 0 .15rem rgba(13, 110, 253, .15);
+        }
+    </style>
+
+    <script>
+        (function() {
+            const input = document.getElementById('searchRiwayat');
+            if (!input) {
+                return;
+            }
+            const table = document.getElementById('riwayatSuratTable');
+            const rows = () => table.querySelectorAll('tbody tr.data-row');
+            const emptyStateServer = document.getElementById('emptyStateRow');
+
+            function applyFilter() {
+                const term = input.value.trim().toLowerCase();
+                let visible = 0;
+
+                rows().forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    const match = text.includes(term);
+                    row.style.display = match ? '' : 'none';
+                    if (match) {
+                        visible++;
+                    }
+                });
+
+                if (!rows().length) {
+                    return;
+                }
+
+                if (term && visible === 0) {
+                    if (!document.getElementById('emptyStateClient')) {
+                        const tr = document.createElement('tr');
+                        tr.id = 'emptyStateClient';
+                        tr.innerHTML = `<td colspan="7" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-search display-6 d-block mb-2"></i>
+                                    Tidak ditemukan hasil untuk pencarian "<strong>${term}</strong>"
+                                </div>
+                            </td>`;
+                        table.querySelector('tbody').appendChild(tr);
+                    }
+                } else {
+                    const clientEmpty = document.getElementById('emptyStateClient');
+                    if (clientEmpty) {
+                        clientEmpty.remove();
+                    }
+                }
+
+                if (emptyStateServer) {
+                    emptyStateServer.style.display = (rows().length === 0 || term) ? 'none' : '';
+                }
+            }
+
+            input.addEventListener('input', applyFilter);
+        })();
+    </script>
+@endsection
