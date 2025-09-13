@@ -42,11 +42,12 @@ class SuratKeteranganDomisiliController extends Controller
             'tempat_lahir' => 'required|string|max:255',
             'tanggal_lahir' => 'required|date',
             'status_perkawinan' => 'required|string|max:20',
-            'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
+            'jenis_kelamin' => 'required|in:Laki-Laki,perempuan',
             'agama' => 'required|string',
             'pekerjaan' => 'required|string|max:255',
             'alamat' => 'required|string',
         ]);
+
 
         try {
             // Format kapitalisasi awal kata
@@ -76,7 +77,7 @@ class SuratKeteranganDomisiliController extends Controller
                 'tempat_lahir' => $tempatLahir,
                 'tanggal_lahir' => $request->tanggal_lahir,
                 'status_perkawinan' => $statusPerkawinan,
-                'jenis_kelamin' => $request->$jenisKelamin,
+                'jenis_kelamin' => $jenisKelamin,
                 'agama' => $agama,
                 'pekerjaan' => $pekerjaan,
                 'alamat' => $alamat,
@@ -89,7 +90,7 @@ class SuratKeteranganDomisiliController extends Controller
 
             return redirect()->route('surat.skd');
         } catch (\Exception $e) {
-            Alert::error('Gagal!', 'Terjadi kesalahan: '.$e->getMessage());
+            Alert::error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
 
             return redirect()->back()->withInput();
         }
@@ -144,7 +145,7 @@ class SuratKeteranganDomisiliController extends Controller
 
             return redirect()->route('skd.index');
         } catch (\Exception $e) {
-            Alert::error('Gagal!', 'Terjadi kesalahan: '.$e->getMessage());
+            Alert::error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
 
             return redirect()->back()->withInput();
         }
@@ -174,7 +175,7 @@ class SuratKeteranganDomisiliController extends Controller
 
             return view('layouts.admin.layanan.e-surat.skd.template-with-barcode', compact('skd', 'suratTerbit', 'verifikasi'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -198,7 +199,7 @@ class SuratKeteranganDomisiliController extends Controller
                 return redirect()->route('skd.preview', $id);
             }
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -217,7 +218,7 @@ class SuratKeteranganDomisiliController extends Controller
 
             return view('layouts.admin.layanan.e-surat.skd.preview', compact('skd', 'suratTerbit'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -245,7 +246,7 @@ class SuratKeteranganDomisiliController extends Controller
 
             return view('layouts.admin.layanan.e-surat.skd.preview-verified', compact('skd', 'suratTerbit', 'verifikasi'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -280,7 +281,7 @@ class SuratKeteranganDomisiliController extends Controller
 
             return redirect()->back()->with('success', 'Pengajuan TTD berhasil dikirim ke sekretaris untuk verifikasi.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 }
