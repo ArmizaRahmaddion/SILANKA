@@ -48,61 +48,101 @@
                 </div>
             </div>
 
-            @php
-                $suratItems = [
-                    [
-                        'route' => 'surat.sktm',
+            {{-- @php
+                $defaultMeta = [
+                    'title' => null,
+                    'desc' => '-',
+                    'icon' => 'bi-file-earmark-text',
+                ];
+
+                $metaSurat = [
+                    'surat.sktm' => [
                         'title' => 'Surat Keterangan Tidak Mampu',
                         'desc' => 'Keterangan resmi kondisi ekonomi.',
                         'icon' => 'bi-people',
                     ],
-                    [
-                        'route' => 'surat.skkm',
+                    'surat.skkm' => [
                         'title' => 'Surat Keterangan Meninggal Dunia',
                         'desc' => 'Dokumen keterangan kematian.',
                         'icon' => 'bi-heartbreak',
                     ],
-                    [
-                        'route' => 'surat.skaw',
+                    'surat.skaw' => [
                         'title' => 'Surat Keterangan Ahli Waris',
                         'desc' => 'Keterangan legal ahli waris.',
                         'icon' => 'bi-diagram-3',
                     ],
-                    [
-                        'route' => 'surat.skd',
+                    'surat.skd' => [
                         'title' => 'Surat Keterangan Domisili',
                         'desc' => 'Domisili tempat tinggal resmi.',
                         'icon' => 'bi-geo-alt',
                     ],
-                    [
-                        'route' => 'surat.sku',
+                    'surat.sku' => [
                         'title' => 'Surat Keterangan Usaha',
                         'desc' => 'Legalitas dan aktivitas usaha.',
                         'icon' => 'bi-briefcase',
                     ],
                 ];
-            @endphp
+
+                $jenisSurat = collect($JenisSurat)->map(function ($row) use ($metaSurat, $defaultMeta) {
+                    $routeName = $row->route ?? ($row->kode_surat ? 'surat.' . $row->kode_surat : null);
+
+                    $meta =
+                        $routeName && isset($metaSurat[$routeName])
+                            ? $metaSurat[$routeName]
+                            : array_merge($defaultMeta, [
+                                'title' => $row->nama_surat ? ucwords($row->nama_surat) : 'Surat Tidak Dikenal',
+                            ]);
+
+                    return [
+                        'id' => $row->id,
+                        'nama_surat' => $row->nama_surat,
+                        'route' => $routeName,
+                        'title' => $meta['title'],
+                        'desc' => $meta['desc'],
+                        'icon' => $meta['icon'],
+                    ];
+                });
+            @endphp --}}
 
             <div class="row g-4" id="suratGrid">
-                @foreach ($suratItems as $item)
-                    <div class="col-6 col-md-4 col-lg-3 surat-item" data-title="{{ Str::lower($item['title']) }}">
+                @forelse ($JenisSurat as $item)
+                    <div class="col-6 col-md-6 col-lg-4 surat-item" data-title="{{ strtolower($item->nama_surat) }}">
                         <div class="card h-100 border-0 shadow-sm surat-card position-relative">
                             <div class="card-body d-flex flex-column text-center p-4">
+
+                                {{-- Icon --}}
                                 <div class="surat-icon-wrapper mx-auto mb-3">
-                                    <i class="bi {{ $item['icon'] }} surat-icon"></i>
+                                    <i class="bi {{ $item->icon }} surat-icon"></i>
                                 </div>
-                                <h6 class="fw-semibold mb-2 text-truncate" title="{{ $item['title'] }}">{{ $item['title'] }}
+
+                                {{-- Title --}}
+                                <h6 class="fw-semibold mb-2 text-truncate" title="{{ $item->nama_surat }}">
+                                    {{ $item->nama_surat }}
                                 </h6>
-                                <p class="small text-muted mb-3 flex-grow-1">{{ $item['desc'] }}</p>
-                                <a href="{{ route($item['route']) }}"
+
+                                {{-- Description --}}
+                                <p class="small text-muted mb-3 flex-grow-1">
+                                    {{ $item->description ?? 'Tidak ada deskripsi.' }}
+                                </p>
+
+                                {{-- Action --}}
+                                <a href="{{ route('surat.' . strtolower($item->kode_surat)) }}"
                                     class="stretched-link btn btn-sm btn-outline-primary mt-auto">
                                     Ajukan
                                 </a>
                             </div>
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <div class="col-12">
+                        <p class="text-center text-muted mb-0">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Tidak ada jenis surat tersedia.
+                        </p>
+                    </div>
+                @endforelse
             </div>
+
 
             <div id="noResult" class="text-center d-none mt-4">
                 <p class="text-muted mb-0"><i class="bi bi-info-circle me-1"></i>Tidak ada jenis surat yang cocok.</p>

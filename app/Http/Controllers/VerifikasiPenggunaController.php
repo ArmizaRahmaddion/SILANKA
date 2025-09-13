@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\VerifikasiPengguna;
 use App\Services\FonnteService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -119,20 +120,32 @@ class VerifikasiPenggunaController extends Controller
         return redirect()->back()->with('success', 'Data berhasil dikirim. Menunggu verifikasi admin.');
     }
 
-    public function tolak(Request $request, $id)
+    public function tolak(Request $request, $id): RedirectResponse
     {
-        $user = VerifikasiPengguna::findOrFail($id);
         $pesan = $request->pesan_penolakan;
 
-        // Ubah nomor HP ke format internasional (08 → 62)
+        $user = VerifikasiPengguna::findOrFail($id);
+
+        $devices = $this->checkAccountToken();
+        $activeDevice = $devices->first(function ($device) {
+            $status = strtolower($device->status);
+            return ! in_array($status, ['disconnect', 'disconnected', 'offline']);
+        });
+
+        if (! $activeDevice) {
+            return redirect()->back()->withErrors([
+                'fonnte' => 'Tidak ada device Fonnte yang sedang terhubung.',
+            ]);
+        }
+
         $nomor = $user->nomor_hp;
-        if (substr($nomor, 0, 2) == '08') {
+        if (substr($nomor, 0, 2) === '08') {
             $nomor = '62' . substr($nomor, 1);
         }
 
         // Kirim pesan ke WhatsApp via Fonnte
-        Http::withHeaders([
-            'Authorization' => '5fdfLNzPGCRgsn5B5FiD', // Token Fonnte kamu
+        $response = Http::withHeaders([
+            'Authorization' => $activeDevice->token,
         ])->post('https://api.fonnte.com/send', [
             'target' => $nomor,
             'message' => "Halo $user->nama_lengkap, verifikasi akun kamu ditolak.\n\nCatatan: $pesan\n\nSilakan lengkapi data kamu dan ajukan ulang.",
@@ -146,7 +159,7 @@ class VerifikasiPenggunaController extends Controller
         return redirect()->back()->with('success', 'Penolakan berhasil dikirim dan dikabari ke WhatsApp.');
     }
 
-    public function terima(int $id): \Illuminate\Http\RedirectResponse
+    public function terima(int $id): RedirectResponse
     {
         $user = VerifikasiPengguna::findOrFail($id);
 

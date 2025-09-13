@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id(); // Auto increment primary key (BIGINT unsigned)
             $table->string('nama_surat'); // default 255 karakter
             $table->string('kode_surat'); // default 255 karakter
+            $table->string('description'); // default 255 karakter
+            $table->string('icon'); // default 255 karakter
             $table->timestamps(); // created_at dan updated_at
         });
     }
