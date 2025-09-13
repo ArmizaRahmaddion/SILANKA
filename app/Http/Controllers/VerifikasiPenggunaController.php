@@ -3,13 +3,28 @@
 namespace App\Http\Controllers;
 
 use App\Models\VerifikasiPengguna;
+use App\Services\FonnteService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 
 class VerifikasiPenggunaController extends Controller
 {
+
+    /**
+     * Fonnte service instance
+     */
+    protected FonnteService $fonnteService;
+
+    /**
+     * Constructor
+     */
+    public function __construct(FonnteService $fonnteService)
+    {
+        $this->fonnteService = $fonnteService;
+    }
+
     public function index()
     {
         // Ambil pengguna yang belum diverifikasi, misalnya berdasarkan kolom 'is_verified'
@@ -73,12 +88,12 @@ class VerifikasiPenggunaController extends Controller
             }
 
             try {
-                $filename = uniqid('ktp_').'.'.$file->getClientOriginalExtension();
+                $filename = uniqid('ktp_') . '.' . $file->getClientOriginalExtension();
                 $file->move(public_path('storage/ktp'), $filename); // Simpan ke public/storage/ktp
-                $path = 'ktp/'.$filename;
+                $path = 'ktp/' . $filename;
             } catch (\Exception $e) {
                 return redirect()->back()->withErrors([
-                    'foto_ktp' => 'Gagal menyimpan file: '.$e->getMessage(),
+                    'foto_ktp' => 'Gagal menyimpan file: ' . $e->getMessage(),
                 ]);
             }
         }
@@ -97,7 +112,7 @@ class VerifikasiPenggunaController extends Controller
             );
         } catch (\Exception $e) {
             return redirect()->back()->withErrors([
-                'error' => 'Gagal menyimpan data ke database: '.$e->getMessage(),
+                'error' => 'Gagal menyimpan data ke database: ' . $e->getMessage(),
             ]);
         }
 
@@ -112,7 +127,7 @@ class VerifikasiPenggunaController extends Controller
         // Ubah nomor HP ke format internasional (08 → 62)
         $nomor = $user->nomor_hp;
         if (substr($nomor, 0, 2) == '08') {
-            $nomor = '62'.substr($nomor, 1);
+            $nomor = '62' . substr($nomor, 1);
         }
 
         // Kirim pesan ke WhatsApp via Fonnte
@@ -131,28 +146,81 @@ class VerifikasiPenggunaController extends Controller
         return redirect()->back()->with('success', 'Penolakan berhasil dikirim dan dikabari ke WhatsApp.');
     }
 
-    public function terima(Request $request, $id)
+    public function terima(int $id): \Illuminate\Http\RedirectResponse
     {
         $user = VerifikasiPengguna::findOrFail($id);
 
-        // Ubah nomor HP ke format internasional (08 → 62)
-        $nomor = $user->nomor_hp;
-        if (substr($nomor, 0, 2) == '08') {
-            $nomor = '62'.substr($nomor, 1);
+        $devices = $this->checkAccountToken();
+        $activeDevice = $devices->first(function ($device) {
+            $status = strtolower($device->status);
+            return ! in_array($status, ['disconnect', 'disconnected', 'offline']);
+        });
+
+        if (! $activeDevice) {
+            return redirect()->back()->withErrors([
+                'fonnte' => 'Tidak ada device Fonnte yang sedang terhubung.',
+            ]);
         }
 
-        // Kirim pesan ke WhatsApp via Fonnte
-        Http::withHeaders([
-            'Authorization' => '5fdfLNzPGCRgsn5B5FiD', // Token Fonnte kamu
+        $nomor = $user->nomor_hp;
+        if (substr($nomor, 0, 2) === '08') {
+            $nomor = '62' . substr($nomor, 1);
+        }
+
+        $response = Http::withHeaders([
+            'Authorization' => $activeDevice->token,
         ])->post('https://api.fonnte.com/send', [
             'target' => $nomor,
-            'message' => "Halo $user->nama_lengkap, verifikasi akun kamu telah diterima. Sekarang kamu bisa mengaskes layanan surat dan pengaduan.",
+            'message' => "Halo $user->nama_lengkap, verifikasi akun kamu telah diterima. Sekarang kamu bisa mengakses layanan surat dan pengaduan.",
         ]);
 
-        // Update status
+        if (! $response->ok()) {
+            return redirect()->back()->withErrors([
+                'fonnte' => 'Gagal mengirim WhatsApp melalui Fonnte.',
+            ]);
+        }
+
         $user->status = 'verified';
         $user->save();
 
-        return redirect()->back()->with('success', 'Verifikasi berhasil dikirim dan dikabari ke WhatsApp.');
+        return redirect()->back()->with('success', 'Verifikasi berhasil dan notifikasi WhatsApp sudah dikirim.');
+    }
+
+    protected function checkAccountToken(): Collection
+    {
+        $apiResponse = $this->fonnteService->getAllDevices();
+
+        $devices = collect();
+        if (($apiResponse['status'] ?? false) && isset($apiResponse['data']['data'])) {
+            $devices = collect($apiResponse['data']['data'])->map(function ($device) {
+                return (object) [
+                    'id' => $device['token'] ?? '',
+                    'name' => $device['name'] ?? 'Unknown Device',
+                    'token' => $device['token'] ?? '',
+                    'device' => $device['device'] ?? '',
+                    'is_active' => $this->mapAPIStatusToLocal($device['status'] ?? 'unknown'),
+                    'status' => $device['status'] ?? 'unknown',
+                    'device_info' => $device['device_info'] ?? null,
+                    'created_at' => now(),
+                ];
+            });
+        }
+
+        return $devices;
+    }
+
+    protected function mapAPIStatusToLocal(?string $status): bool
+    {
+        if ($status === null) {
+            return false;
+        }
+
+        $normalized = strtolower($status);
+
+        if (in_array($normalized, ['disconnect', 'disconnected', 'offline', 'not connected', 'qr', 'waiting'], true)) {
+            return false;
+        }
+
+        return in_array($normalized, ['connected', 'online', 'ready'], true);
     }
 }

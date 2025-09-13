@@ -357,11 +357,11 @@
                                                         </button>
 
                                                         @if (in_array($status, ['connect', 'authenticated', 'active']))
-                                                            <button class="btn btn-sm btn-outline-success"
+                                                            {{-- <button class="btn btn-sm btn-outline-success"
                                                                 title="Send Test Message"
                                                                 onclick="openSendMessageModal('{{ $device->token }}')">
                                                                 <i class="ri-message-2-line"></i>
-                                                            </button>
+                                                            </button> --}}
                                                             <button class="btn btn-sm btn-outline-warning"
                                                                 title="Disconnect Device"
                                                                 onclick="disconnectDevice('{{ $device->token }}')">
@@ -475,7 +475,7 @@
         </div>
     </div>
 
-    {{-- Send Message Modal --}}
+    {{-- Send Message Modal
     <div class="modal fade" id="sendMessageModal" tabindex="-1" aria-labelledby="sendMessageModalLabel"
         aria-hidden="true">
         <div class="modal-dialog">
@@ -510,7 +510,7 @@
                 </form>
             </div>
         </div>
-    </div>
+    </div> --}}
 @endsection
 
 @push('scripts')
@@ -568,49 +568,49 @@
             `);
         }
 
-        function openSendMessageModal(deviceToken) {
-            $('#send-device-token').val(deviceToken);
-            $('#sendMessageModal').modal('show');
-        }
+        // function openSendMessageModal(deviceToken) {
+        //     $('#send-device-token').val(deviceToken);
+        //     $('#sendMessageModal').modal('show');
+        // }
 
         $('#sendMessageForm').on('submit', function(e) {
             e.preventDefault();
             sendTestMessage();
         });
 
-        function sendTestMessage() {
-            const token = $('#send-device-token').val();
-            const phone = $('#test-phone').val();
-            const message = $('#test-message').val();
+        // function sendTestMessage() {
+        //     const token = $('#send-device-token').val();
+        //     const phone = $('#test-phone').val();
+        //     const message = $('#test-message').val();
 
-            if (!phone || !message) {
-                showError('Mohon lengkapi semua field');
-                return;
-            }
+        //     if (!phone || !message) {
+        //         showError('Mohon lengkapi semua field');
+        //         return;
+        //     }
 
-            $.ajax({
-                url: '/devices/send-message',
-                method: 'POST',
-                data: {
-                    token: token,
-                    phone: phone,
-                    message: message,
-                    _token: $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
-                    if (response.status) {
-                        showSuccess('Pesan berhasil dikirim!');
-                        $('#sendMessageModal').modal('hide');
-                        $('#sendMessageForm')[0].reset();
-                    } else {
-                        showError(response.message || 'Gagal mengirim pesan');
-                    }
-                },
-                error: function(xhr) {
-                    showError(xhr.responseJSON?.message || 'Gagal mengirim pesan');
-                }
-            });
-        }
+        //     $.ajax({
+        //         url: '/devices/send-message',
+        //         method: 'POST',
+        //         data: {
+        //             token: token,
+        //             phone: phone,
+        //             message: message,
+        //             _token: $('meta[name="csrf-token"]').attr('content')
+        //         },
+        //         success: function(response) {
+        //             if (response.status) {
+        //                 showSuccess('Pesan berhasil dikirim!');
+        //                 $('#sendMessageModal').modal('hide');
+        //                 $('#sendMessageForm')[0].reset();
+        //             } else {
+        //                 showError(response.message || 'Gagal mengirim pesan');
+        //             }
+        //         },
+        //         error: function(xhr) {
+        //             showError(xhr.responseJSON?.message || 'Gagal mengirim pesan');
+        //         }
+        //     });
+        // }
 
         function startConnectionCheck(deviceToken) {
             qrInterval = setInterval(function() {

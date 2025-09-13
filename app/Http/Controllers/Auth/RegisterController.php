@@ -28,7 +28,7 @@ class RegisterController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/beranda';
+    protected $redirectTo = '/';
 
     // protected function redirectTo()
     // {

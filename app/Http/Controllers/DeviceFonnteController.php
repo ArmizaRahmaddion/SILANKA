@@ -387,7 +387,7 @@ class DeviceFonnteController extends Controller
         }
 
         try {
-            $deviceToken = $request->header('Authorization', config('services.fonnte.account_token'));
+            $deviceToken = $request->header('Authorization');
 
             // Remove 'Bearer ' prefix if exists
             if (str_starts_with($deviceToken, 'Bearer ')) {

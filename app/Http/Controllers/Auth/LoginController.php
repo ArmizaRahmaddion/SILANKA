@@ -128,7 +128,7 @@ class LoginController extends Controller
         }
 
         if ($user->hasRole(['masyarakat'])) {
-            return redirect('/beranda')->with('success', 'Login Berhasil');
+            return redirect()->intended('/')->with('success', 'Login Berhasil');
         }
 
         Auth::logout();
