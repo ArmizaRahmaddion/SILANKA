@@ -38,14 +38,14 @@ class SuratTerbitController extends Controller
             $nomorSurat = $this->generateNomorSurat($jenisSuratId);
 
             switch ($jenisSuratId) {
-                case 1: //  1 = Surat Keterangan Meninggal Dunia
-                    $suratData = $permintaan->suratKeteranganMeninggalDunia;
+                case 1: //  1 = Surat Keterangan Tidak Mampu
+                    $suratData = $permintaan->suratKeteranganTidakMampu;
                     if (! $suratData) {
                         return redirect()->route('permintaan.surat')
-                            ->with('error', 'Data surat Keterangan meninggal dunia tidak ditemukan.');
+                            ->with('error', 'Data surat Keterangan Tidak Mampu tidak ditemukan.');
                     }
 
-                    return view('layouts.admin.permintaan-surat.surat-keterangan-meninggal-dunia.skkm-create', compact('permintaan', 'suratData', 'nomorSurat'));
+                    return view('layouts.admin.permintaan-surat.surat-keterangan-tidak-mampu.sktm-create', compact('permintaan', 'suratData', 'nomorSurat'));
 
                 case 2: //  2 = Surat Keterangan Domisili
                     $suratData = $permintaan->suratKeteranganDomisili;
@@ -56,7 +56,16 @@ class SuratTerbitController extends Controller
 
                     return view('layouts.admin.permintaan-surat.surat-keterangan-domisili.skd-create', compact('permintaan', 'suratData', 'nomorSurat'));
 
-                case 3: //  3 = Surat Keterangan Usaha
+                case 3: //  3 = Surat Keterangan Meninggal Dunia
+                    $suratData = $permintaan->suratKeteranganMeninggalDunia;
+                    if (! $suratData) {
+                        return redirect()->route('permintaan.surat')
+                            ->with('error', 'Data surat Keterangan meninggal dunia tidak ditemukan.');
+                    }
+
+                    return view('layouts.admin.permintaan-surat.surat-keterangan-meninggal-dunia.skkm-create', compact('permintaan', 'suratData', 'nomorSurat'));
+
+                case 4: //  4 = Surat Keterangan Usaha
                     $suratData = $permintaan->suratKeteranganUsaha;
                     if (! $suratData) {
                         return redirect()->route('permintaan.surat')
@@ -64,15 +73,6 @@ class SuratTerbitController extends Controller
                     }
 
                     return view('layouts.admin.permintaan-surat.surat-keterangan-usaha.sku-create', compact('permintaan', 'suratData', 'nomorSurat'));
-
-                case 4: //  4 = Surat Keterangan Tidak Mampu
-                    $suratData = $permintaan->suratKeteranganTidakMampu;
-                    if (! $suratData) {
-                        return redirect()->route('permintaan.surat')
-                            ->with('error', 'Data surat Keterangan Tidak Mampu tidak ditemukan.');
-                    }
-
-                    return view('layouts.admin.permintaan-surat.surat-keterangan-tidak-mampu.sktm-create', compact('permintaan', 'suratData', 'nomorSurat'));
                     // Tambahkan jenis surat lain jika ada
                 default:
                     return redirect()->route('permintaan.surat')
@@ -80,7 +80,7 @@ class SuratTerbitController extends Controller
             }
         } catch (\Exception $e) {
             return redirect()->route('permintaan.surat')
-                ->with('error', 'Terjadi kesalahan: '.$e->getMessage());
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -112,10 +112,10 @@ class SuratTerbitController extends Controller
             // Cek apakah data surat tersedia sesuai jenis_surat_id
             $jenisSuratId = $permintaan->jenis_surat_id;
             $suratAda = match ($jenisSuratId) {
-                1 => $permintaan->suratKeteranganMeninggalDunia,
+                1 => $permintaan->suratKeteranganTidakMampu,
                 2 => $permintaan->suratKeteranganDomisili,
-                3 => $permintaan->suratKeteranganUsaha,
-                4 => $permintaan->suratKeteranganTidakMampu,
+                3 => $permintaan->suratKeteranganMeninggalDunia,
+                4 => $permintaan->suratKeteranganUsaha,
                 // Tambahkan jenis surat lain jika ada
                 default => null,
             };
@@ -137,13 +137,13 @@ class SuratTerbitController extends Controller
             $permintaan->update(['status' => 'Diterima']);
 
             Alert::success(
-                'Surat berhasil dibuat dengan nomor: '.$request->nomor_surat
+                'Surat berhasil dibuat dengan nomor: ' . $request->nomor_surat
             );
 
             return redirect()->route('permintaan.surat');
             // ->with('success', 'Surat berhasil diterbitkan dengan nomor: ' . $request->nomor_surat);
         } catch (\Exception $e) {
-            Alert::error('Gagal!', 'Terjadi kesalahan: '.$e->getMessage());
+            Alert::error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
 
             return redirect()->back()->withInput();
         }
@@ -159,10 +159,10 @@ class SuratTerbitController extends Controller
 
         // Tentukan kode surat berdasarkan jenis_surat_id
         $kodeSurat = match ($jenisSuratId) {
-            1 => 'SKKM', // Surat Keterangan Kematian/Meninggal
+            1 => 'SKTM', // Surat Keterangan Tidak Mampu
             2 => 'SKD',  // Surat Keterangan Domisili
-            3 => 'SKU',  // Surat Keterangan Usaha
-            4 => 'SKTM',  // Surat Keterangan Tidak Mampu
+            3 => 'SKKM', // Surat Keterangan Kematian/Meninggal
+            4 => 'SKU',  // Surat Keterangan Usaha
             default => 'LAINNYA',
         };
 

@@ -4,73 +4,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cek Verifikasi Surat - Nagari Koto Alam</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Cek SILANKA - Nagari Koto Alam</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #008374 100%);
+            background: linear-gradient(120deg, #43cea2 0%, #185a9d 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .check-container {
-            max-width: 500px;
+            max-width: 430px;
             margin: 0 auto;
-            padding: 2rem 1rem;
+            padding: 2.5rem 1.2rem;
         }
 
         .check-card {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 22px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
             overflow: hidden;
+            border: 1.5px solid #e3e3e3;
+            animation: fadeInUp 0.7s cubic-bezier(.39, .575, .56, 1.000);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translate3d(0, 40px, 0);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
         }
 
         .check-header {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            background: linear-gradient(120deg, #43cea2 0%, #185a9d 100%);
             color: white;
-            padding: 2rem;
+            padding: 2.2rem 1.5rem 1.5rem 1.5rem;
             text-align: center;
+            border-bottom-left-radius: 40px 20px;
+            border-bottom-right-radius: 40px 20px;
         }
 
-        .check-body {
-            padding: 2rem;
+        .check-header i {
+            font-size: 3.2rem;
+            margin-bottom: 0.7rem;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.12));
         }
 
-        .form-control {
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            padding: 12px 15px;
-            font-size: 16px;
-        }
-
-        .form-control:focus {
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
-        }
-
-        .btn-check {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            border: none;
-            border-radius: 10px;
-            padding: 12px 30px;
-            font-weight: 600;
-            text-transform: uppercase;
+        .check-header h3 {
+            font-weight: 700;
             letter-spacing: 1px;
         }
 
-        .btn-check:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        .check-header p {
+            font-size: 1.1rem;
+            opacity: 0.92;
         }
+
+        .check-body {
+            padding: 2.2rem 1.5rem 1.5rem 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #185a9d;
+        }
+
+        .form-control {
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+            padding: 13px 16px;
+            font-size: 16px;
+            background: #f7fafc;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: #43cea2;
+            box-shadow: 0 0 0 0.18rem rgba(67, 206, 162, 0.18);
+        }
+
+        /* .btn-check {
+            background: linear-gradient(120deg, #43cea2 0%, #185a9d 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 13px 0;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #fff;
+            font-size: 1.08rem;
+            box-shadow: 0 4px 16px rgba(67, 206, 162, 0.13);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .btn-check:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 8px 24px rgba(24, 90, 157, 0.18);
+        } */
 
         .info-box {
             background: #f8f9fa;
-            border-left: 4px solid #4CAF50;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 5px;
+            border-left: 4px solid #43cea2;
+            padding: 1.1rem 1rem;
+            margin: 1.2rem 0 0.5rem 0;
+            border-radius: 7px;
+            font-size: 0.98rem;
+        }
+
+        .alert {
+            border-radius: 10px;
+            font-size: 0.97rem;
+        }
+
+        .text-center.mt-4 a {
+            font-weight: 600;
+            font-size: 1.05rem;
+            opacity: 0.93;
+            transition: color 0.2s;
+        }
+
+        .text-center.mt-4 a:hover {
+            color: #43cea2;
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -80,7 +144,7 @@
         <div class="check-card">
             <div class="check-header">
                 <i class="ri-shield-check-line" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                <h3 class="mb-0">Verifikasi Surat</h3>
+                <h3 class="mb-0">SILANKA</h3>
                 <p class="mb-0 mt-2">Nagari Koto Alam</p>
             </div>
 
@@ -114,11 +178,12 @@
                         @enderror
                     </div>
 
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-success btn-check">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
                             <i class="ri-search-line"></i> Cek Verifikasi Surat
                         </button>
                     </div>
+
                 </form>
 
                 <div class="info-box mt-4">
@@ -132,13 +197,13 @@
                     </ul>
                 </div>
 
-                @if ($code)
+                {{-- @if ($code)
                     <div class="alert alert-info mt-3">
                         <i class="ri-qr-code-line"></i>
                         <strong>QR Code terdeteksi!</strong><br>
                         Silakan masukkan nomor surat untuk verifikasi.
                     </div>
-                @endif
+                @endif --}}
             </div>
         </div>
 
@@ -149,7 +214,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

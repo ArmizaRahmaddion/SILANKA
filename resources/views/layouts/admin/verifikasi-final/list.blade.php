@@ -13,9 +13,9 @@
                         <a href="{{ route('verifikasi.verified') }}" class="btn btn-sm btn-success me-2">
                             <i class="ri-check-double-line"></i> Lihat Surat Terverifikasi
                         </a>
-                        <span
-                            class="badge bg-{{ $verifikasiSurat->count() > 0 ? 'warning' : 'secondary' }} py-2 px-3">{{ $verifikasiSurat->count() }}
-                            Menunggu</span>
+                        <span class="badge bg-{{ $verifikasiSurat->count() > 0 ? 'warning' : 'secondary' }} py-2 px-3">
+                            {{ $verifikasiSurat->count() }} Menunggu
+                        </span>
                     </div>
                 </div>
                 <div class="card-body">
@@ -56,15 +56,13 @@
                                         </td>
                                         <td>
                                             {{ $verifikasi->created_at->format('d/m/Y H:i') }}
-                                            <br><small
-                                                class="text-muted">{{ $verifikasi->created_at->diffForHumans() }}</small>
+                                            <br>
+                                            <small class="text-muted">{{ $verifikasi->created_at->diffForHumans() }}</small>
                                         </td>
                                         <td>
                                             <div class="d-flex gap-1">
-                                                <!-- Preview Surat -->
                                                 @switch($verifikasi->jenisSurat?->kode_surat)
                                                     @case('SKKM')
-                                                        {{-- Surat Keterangan Meninggal Dunia --}}
                                                         @if ($verifikasi->permintaanSurat->suratKeteranganMeninggalDunia)
                                                             <a href="{{ route('skkm.preview', $verifikasi->permintaanSurat->suratKeteranganMeninggalDunia->id) }}"
                                                                 class="btn btn-sm btn-info" title="Preview Surat" target="_blank">
@@ -74,7 +72,6 @@
                                                     @break
 
                                                     @case('SKD')
-                                                        {{-- Surat Keterangan Domisili --}}
                                                         @if ($verifikasi->permintaanSurat->suratKeteranganDomisili)
                                                             <a href="{{ route('skd.preview', $verifikasi->permintaanSurat->suratKeteranganDomisili->id) }}"
                                                                 class="btn btn-sm btn-info" title="Preview Surat" target="_blank">
@@ -84,7 +81,6 @@
                                                     @break
 
                                                     @case('SKU')
-                                                        {{-- Surat Keterangan Usaha --}}
                                                         @if ($verifikasi->permintaanSurat->suratKeteranganUsaha)
                                                             <a href="{{ route('sku.preview', $verifikasi->permintaanSurat->suratKeteranganUsaha->id) }}"
                                                                 class="btn btn-sm btn-info" title="Preview Surat" target="_blank">
@@ -94,7 +90,6 @@
                                                     @break
 
                                                     @case('SKTM')
-                                                        {{-- Surat Keterangan Usaha --}}
                                                         @if ($verifikasi->permintaanSurat->suratKeteranganTidakMampu)
                                                             <a href="{{ route('sktm.preview', $verifikasi->permintaanSurat->suratKeteranganTidakMampu->id) }}"
                                                                 class="btn btn-sm btn-info" title="Preview Surat" target="_blank">
@@ -103,14 +98,10 @@
                                                         @endif
                                                     @break
 
-                                                    {{-- Tambahkan jenis surat lainnya di sini jika ada --}}
-
                                                     @default
                                                         <span class="text-muted">Jenis surat tidak dikenali</span>
                                                 @endswitch
 
-
-                                                <!-- Tombol Verifikasi -->
                                                 <button class="btn btn-sm btn-success" title="Verifikasi & Generate Barcode"
                                                     onclick="confirmVerifikasi({{ $verifikasi->id }}, '{{ $verifikasi->suratTerbit?->nomor_surat }}')">
                                                     <i class="ri-check-double-line"></i> Verifikasi

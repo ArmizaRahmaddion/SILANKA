@@ -391,8 +391,8 @@
         function confirmAjukanTtd(id, kodeSurat, nomorSurat) {
             document.getElementById('nomorSuratTtd').textContent = nomorSurat;
             const form = document.getElementById('formAjukanTtd');
-            // Assuming your TTD route is something like /sku/{id}/ajukan-ttd
-            form.action = `/surat/${kodeSurat}/${id}/ajukan-ttd`;
+            // Use the correct route: /sku/{id}/ajukan-ttd
+            form.action = `/sku/${id}/ajukan-ttd`;
             const ttdModal = new bootstrap.Modal(document.getElementById('modalAjukanTtd'));
             ttdModal.show();
         }

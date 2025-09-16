@@ -85,7 +85,7 @@ class SuratKeteranganMeniggalDuniaController extends Controller
 
             return redirect()->route('surat.skkm');
         } catch (\Exception $e) {
-            Alert::error('Gagal!', 'Terjadi kesalahan: '.$e->getMessage());
+            Alert::error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
 
             return redirect()->back()->withInput();
         }
@@ -136,7 +136,7 @@ class SuratKeteranganMeniggalDuniaController extends Controller
 
             return redirect()->route('skkm.index');
         } catch (\Exception $e) {
-            Alert::error('Gagal!', 'Terjadi kesalahan: '.$e->getMessage());
+            Alert::error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
 
             return redirect()->back()->withInput();
         }
@@ -169,7 +169,7 @@ class SuratKeteranganMeniggalDuniaController extends Controller
 
             return view('layouts.admin.layanan.e-surat.skkm.template-with-barcode', compact('skkm', 'suratTerbit', 'verifikasi'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -193,7 +193,7 @@ class SuratKeteranganMeniggalDuniaController extends Controller
                 return redirect()->route('skkm.preview', $id);
             }
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -212,7 +212,7 @@ class SuratKeteranganMeniggalDuniaController extends Controller
 
             return view('layouts.admin.layanan.e-surat.skkm.preview', compact('skkm', 'suratTerbit'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -240,7 +240,42 @@ class SuratKeteranganMeniggalDuniaController extends Controller
 
             return view('layouts.admin.layanan.e-surat.skkm.preview-verified', compact('skkm', 'suratTerbit', 'verifikasi'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
+        }
+    }
+
+    public function ajukanTtd($suratId)
+    {
+        try {
+            // Cari data surat berdasarkan ID (misalnya SKKM)
+            $surat = SuratKeteranganMeninggalDunia::findOrFail($suratId);
+            $permintaanSurat = $surat->permintaanSurat;
+            $suratTerbit = $permintaanSurat->suratTerbit->first();
+
+            // Validasi status surat harus "Diterima"
+            if ($permintaanSurat->status !== 'Diterima') {
+                return redirect()->back()->with('error', 'Surat harus berstatus "Diterima" untuk dapat diajukan TTD.');
+            }
+
+            // Cek apakah sudah pernah diajukan
+            $existingVerifikasi = VerifikasiSuratFinal::where('surat_terbit_id', $suratTerbit->id)->first();
+            if ($existingVerifikasi) {
+                return redirect()->back()->with('error', 'Surat ini sudah pernah diajukan untuk verifikasi.');
+            }
+
+            // Buat record verifikasi baru
+            VerifikasiSuratFinal::create([
+                'surat_terbit_id' => $suratTerbit->id,
+                'jenis_surat_id' => $permintaanSurat->jenis_surat_id,
+                'permintaan_surat_id' => $permintaanSurat->id,
+                'barcode' => null, // akan diisi saat verifikasi
+                'verified_at' => null,
+                'verified_by' => null,
+            ]);
+
+            return redirect()->back()->with('success', 'Pengajuan TTD berhasil dikirim ke sekretaris untuk verifikasi.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 }

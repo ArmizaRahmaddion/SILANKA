@@ -111,6 +111,24 @@ Route::middleware(['auth', 'role:masyarakat|superadmin'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| Admin, Seknag, masyarakat
+|--------------------------------------------------------------------------
+*/
+
+/*
+|--------------------------------------------------------------------------
+| Print Surat Final
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:masyarakat|seknag'])->group(function () {
+    Route::get('/skd/{id}/print', [SuratKeteranganDomisiliController::class, 'print'])->name('skd.print');
+    Route::get('/skkm/{id}/print', [SuratKeteranganMeniggalDuniaController::class, 'print'])->name('skkm.print');
+    Route::get('/sku/{id}/print', [SuratKeteranganUsahaController::class, 'print'])->name('sku.print');
+    Route::get('/sktm/{id}/print', [SuratKeteranganTidakMampuController::class, 'print'])->name('sktm.print');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Admin, Seknag, Staff TU Routes
 |--------------------------------------------------------------------------
 */
@@ -148,25 +166,27 @@ Route::middleware(['auth', 'role:superadmin|seknag|staff-tu'])->group(function (
     Route::get('/skkm/create', [SuratKeteranganMeniggalDuniaController::class, 'create'])->name('create');
     Route::post('/skkm/store', [SuratKeteranganMeniggalDuniaController::class, 'store'])->name('store');
     Route::put('/surat/skkm/{id}/update', [SuratKeteranganMeniggalDuniaController::class, 'update'])->name('surat.skkm.update');
-    Route::get('/skkm/{id}/print', [SuratKeteranganMeniggalDuniaController::class, 'print'])->name('skkm.print');
+    // Route::get('/skkm/{id}/print', [SuratKeteranganMeniggalDuniaController::class, 'print'])->name('skkm.print');
     Route::get('/skkm/{id}/preview', [SuratKeteranganMeniggalDuniaController::class, 'preview'])->name('skkm.preview');
+    Route::post('/skkm/{id}/ajukan-ttd', [SuratKeteranganMeniggalDuniaController::class, 'ajukanTtd'])->name('skkm.ajukan.ttd');
     Route::get('/skkm/preview/{id}', [SuratKeteranganMeniggalDuniaController::class, 'redirectPreview'])->name('surat.skkm.preview');
     Route::get('/skkm/verifikasi/preview/{id}', [SuratKeteranganMeniggalDuniaController::class, 'previewVerified'])->name('verifikasi.skkm.preview');
 
     // SKD
     Route::get('/skd', [SuratKeteranganDomisiliController::class, 'index'])->name('skd.index');
     Route::put('/surat/skd/{id}/update', [SuratKeteranganDomisiliController::class, 'update'])->name('surat.skd.update');
-    Route::get('/skd/{id}/print', [SuratKeteranganDomisiliController::class, 'print'])->name('skd.print');
+    // Route::get('/skd/{id}/print', [SuratKeteranganDomisiliController::class, 'print'])->name('skd.print');
     Route::get('/skd/{id}/preview', [SuratKeteranganDomisiliController::class, 'preview'])->name('skd.preview');
-    Route::post('/{id}/ajukan-ttd', [SuratKeteranganDomisiliController::class, 'ajukanTtd'])->name('ajukan.ttd');
+    Route::post('/skd/{id}/ajukan-ttd', [SuratKeteranganDomisiliController::class, 'ajukanTtd'])->name('skd.ajukan.ttd');
     Route::get('/skd/preview/{id}', [SuratKeteranganDomisiliController::class, 'redirectPreview'])->name('surat.skd.preview');
     Route::get('/skd/verifikasi/preview/{id}', [SuratKeteranganDomisiliController::class, 'previewVerified'])->name('verifikasi.skd.preview');
 
     // SKU
     Route::get('/sku', [SuratKeteranganUsahaController::class, 'index'])->name('sku.index');
     Route::put('/surat/sku/{id}/update', [SuratKeteranganUsahaController::class, 'update'])->name('surat.sku.update');
-    Route::get('/sku/{id}/print', [SuratKeteranganUsahaController::class, 'print'])->name('sku.print');
+    // Route::get('/sku/{id}/print', [SuratKeteranganUsahaController::class, 'print'])->name('sku.print');
     Route::get('/sku/{id}/preview', [SuratKeteranganUsahaController::class, 'preview'])->name('sku.preview');
+    Route::post('/sku/{id}/ajukan-ttd', [SuratKeteranganUsahaController::class, 'ajukanTtd'])->name('sku.ajukan.ttd');
     Route::get('/sku/preview/{id}', [SuratKeteranganUsahaController::class, 'redirectPreview'])->name('surat.sku.preview');
     Route::get('/sku/verifikasi/preview/{id}', [SuratKeteranganUsahaController::class, 'previewVerified'])->name('verifikasi.sku.preview');
 
@@ -174,8 +194,9 @@ Route::middleware(['auth', 'role:superadmin|seknag|staff-tu'])->group(function (
     Route::get('/sktm', [SuratKeteranganTidakMampuController::class, 'index'])->name('sktm.index');
     // Route::post('/sktm/store-admin', [SuratKeteranganTidakMampuController::class, 'storeFromAdmin'])->name('sktm.store.admin');
     Route::put('/surat/sktm{id}/update', [SuratKeteranganTidakMampuController::class, 'update'])->name('surat.sktm.update');
-    Route::get('/sktm/{id}/print', [SuratKeteranganTidakMampuController::class, 'print'])->name('sktm.print');
+    // Route::get('/sktm/{id}/print', [SuratKeteranganTidakMampuController::class, 'print'])->name('sktm.print');
     Route::get('/sktm/{id}/preview', [SuratKeteranganTidakMampuController::class, 'preview'])->name('sktm.preview');
+    Route::post('/sktm/{id}/ajukan-ttd', [SuratKeteranganTidakMampuController::class, 'ajukanTtd'])->name('sktm.ajukan.ttd');
     Route::get('/sktm/preview/{id}', [SuratKeteranganTidakMampuController::class, 'redirectPreview'])->name('surat.sktm.preview');
     Route::get('/sktm/verifikasi/preview/{id}', [SuratKeteranganTidakMampuController::class, 'previewVerified'])->name('verifikasi.sktm.preview');
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PermintaanSurat;
 use App\Models\RiwayatStatus;
 use App\Models\VerifikasiPengguna;
+use App\Models\VerifikasiSuratFinal;
 use Illuminate\Support\Facades\Auth;
 
 class RiwayatSuratController extends Controller
@@ -21,14 +22,27 @@ class RiwayatSuratController extends Controller
         }
 
         // Ambil permintaan surat berdasarkan verifikasi_pengguna_id
-        $riwayatSurat = PermintaanSurat::with([
-            'jenisSurat',
+        // $riwayatSurat = PermintaanSurat::with([
+        //     'jenisSurat',
+        //     'suratTerbit',
+        //     'verifikasiPengguna',
+        // ])
+        //     ->where('verifikasi_pengguna_id', $verifikasiPengguna->id)
+        //     ->orderBy('tanggal_permintaan', 'desc')
+        //     ->get();
+
+        $riwayatSurat = VerifikasiSuratFinal::with([
             'suratTerbit',
-            'verifikasiPengguna',
+            'permintaanSurat',
+            'jenisSurat',
+            'permintaanSurat.suratKeteranganMeninggalDunia',
+            'permintaanSurat.suratKeteranganDomisili',
+            'permintaanSurat.suratKeteranganUsaha',
+            'verifiedBy',
         ])
-            ->where('verifikasi_pengguna_id', $verifikasiPengguna->id)
-            ->orderBy('tanggal_permintaan', 'desc')
-            ->paginate(10);
+            ->whereNotNull('verified_at')
+            ->orderBy('verified_at', 'desc')
+            ->get();
 
         return view('layouts.landing-page.riwayat.surat.index', compact('riwayatSurat'));
     }

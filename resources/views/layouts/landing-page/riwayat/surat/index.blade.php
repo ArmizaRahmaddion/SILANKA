@@ -67,7 +67,7 @@
                                             <th style="min-width:120px;">Aksi</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    {{-- <tbody>
                                         @php
                                             $statusBadgeMap = [
                                                 'Selesai' => 'success',
@@ -119,6 +119,12 @@
                                                         data-tanggal="{{ $surat->tanggal_permintaan->translatedFormat('d F Y') }}">
                                                         <i class="bi bi-clock-history"></i><span>Riwayat</span>
                                                     </button>
+                                                    <button type="button"
+                                                        class="btn btn-outline-info btn-sm px-3 d-inline-flex align-items-center gap-1"
+                                                        onclick="window.open('{{ route('surat.check.form') }}', '_blank')"
+                                                        {{ $status !== 'Selesai' ? 'disabled' : '' }}>
+                                                        <i class="bi bi-download"></i><span>Unduh</span>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         @empty
@@ -131,119 +137,246 @@
                                                 </td>
                                             </tr>
                                         @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
 
-                        @if (method_exists($riwayatSurat, 'links'))
-                            <div class="card-footer bg-white py-3">
-                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                    <small class="text-muted">
-                                        Total:
-                                        {{ method_exists($riwayatSurat, 'total') ? $riwayatSurat->total() : $riwayatSurat->count() }}
-                                        data
-                                    </small>
-                                    {{ $riwayatSurat->links() }}
+                                    </tbody> --}}
+
+                                    <tbody>
+                                        @forelse ($riwayatSurat as $riwayat)
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>
+                                                    <strong>{{ $riwayat->suratTerbit->nomor_surat ?? '-' }}</strong>
+                                                </td>
+                                                <td>
+                                                    {{ $riwayat->jenisSurat->nama_surat ?? '-' }}
+                                                </td>
+                                                <td>
+                                                    {{ $riwayat->verified_at->format('d/m/Y H:i') }}
+                                                    <br><small
+                                                        class="text-muted">{{ $riwayat->verified_at->diffForHumans() }}</small>
+                                                </td>
+                                                <td>
+                                                    @if ($riwayat->permintaanSurat->status === 'Selesai')
+                                                        <span class="badge bg-success">
+                                                            <i class="ri-qr-code-line"></i>
+                                                            {{ $riwayat->permintaanSurat->status }}
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-secondary">
+                                                            <i class="ri-close-line"></i>
+                                                            {{ $riwayat->permintaanSurat->status }}
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <button type="button"
+                                                        class="btn btn-outline-info btn-sm px-3 d-inline-flex align-items-center gap-1"
+                                                        data-bs-toggle="modal" data-bs-target="#modalDetail"
+                                                        data-jenis="{{ $riwayat->jenisSurat->nama_surat ?? '-' }}"
+                                                        data-tanggal="{{ $riwayat->permintaanSurat->tanggal_permintaan->translatedFormat('d F Y') }}"
+                                                        data-nomor="{{ $riwayat->suratTerbit->nomor_surat ?? '-' }}"
+                                                        data-status="{{ $riwayat->permintaanSurat->status }}">
+                                                        <i class="bi bi-eye"></i><span>Detail</span>
+                                                    </button>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex gap-1">
+                                                        <button type="button"
+                                                            class="btn btn-primary btn-sm px-3 d-inline-flex align-items-center gap-1"
+                                                            data-bs-toggle="modal" data-bs-target="#modalRiwayat"
+                                                            data-bagian="{{ $riwayat->bagian_saat_ini ?? 'Tata Usaha' }}"
+                                                            data-status="{{ $riwayat->permintaanSurat->status }}"
+                                                            data-tanggal="{{ $riwayat->permintaanSurat->tanggal_permintaan->translatedFormat('d F Y') }}">
+                                                            <i class="bi bi-clock-history"></i><span>Riwayat</span>
+                                                        </button>
+                                                        <!-- Preview Surat dengan Barcode -->
+                                                        @php
+                                                            $kodeSurat = $riwayat->jenisSurat->kode_surat;
+                                                            $permintaan = $riwayat->permintaanSurat;
+                                                        @endphp
+
+
+                                                        <!-- Print Surat dengan Barcode -->
+                                                        @php
+                                                            $kodeSurat = $riwayat->jenisSurat->kode_surat;
+                                                            $permintaan = $riwayat->permintaanSurat;
+                                                        @endphp
+
+                                                        @switch($kodeSurat)
+                                                            @case('SKKM')
+                                                                @if ($permintaan->suratKeteranganMeninggalDunia)
+                                                                    <a href="{{ route('skkm.print', $permintaan->suratKeteranganMeninggalDunia->id) }}"
+                                                                        class="btn btn-sm btn-primary" title="Print Surat"
+                                                                        target="_blank">
+                                                                        <i class="bi bi-printer"></i> Print
+                                                                    </a>
+                                                                @endif
+                                                            @break
+
+                                                            @case('SKD')
+                                                                @if ($permintaan->suratKeteranganDomisili)
+                                                                    <a href="{{ route('skd.print', $permintaan->suratKeteranganDomisili->id) }}"
+                                                                        class="btn btn-sm btn-primary" title="Print Surat"
+                                                                        target="_blank">
+                                                                        <i class="bi bi-printer"></i> Print
+                                                                    </a>
+                                                                @endif
+                                                            @break
+
+                                                            @case('SKU')
+                                                                @if ($permintaan->suratKeteranganUsaha)
+                                                                    <a href="{{ route('sku.print', $permintaan->suratKeteranganUsaha->id) }}"
+                                                                        class="btn btn-sm btn-primary" title="Print Surat"
+                                                                        target="_blank">
+                                                                        <i class="bi bi-printer"></i> Print
+                                                                    </a>
+                                                                @endif
+                                                            @break
+
+                                                            @case('SKTM')
+                                                                @if ($permintaan->suratKeteranganTidakMampu)
+                                                                    <a href="{{ route('sktm.print', $permintaan->suratKeteranganTidakMampu->id) }}"
+                                                                        class="btn btn-sm btn-primary" title="Print Surat"
+                                                                        target="_blank">
+                                                                        <i class="bi bi-printer"></i> Print
+                                                                    </a>
+                                                                @endif
+                                                            @break
+
+                                                            @default
+                                                                <span class="text-muted">Jenis surat tidak dikenali</span>
+                                                        @endswitch
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            @empty
+                                                <tr>
+                                                    <td class="text-center" colspan="7">
+                                                        <div class="py-4">
+                                                            <i class="ri-shield-check-line"
+                                                                style="font-size: 48px; color: #ccc;"></i>
+                                                            <p class="text-muted mt-2">Belum ada surat yang terverifikasi</p>
+                                                            <a href="{{ route('verifikasi.index') }}"
+                                                                class="btn btn-outline-warning">
+                                                                <i class="ri-time-line"></i> Lihat Surat Menunggu Verifikasi
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
-                        @endif
+
+                            @if (method_exists($riwayatSurat, 'links'))
+                                <div class="card-footer bg-white py-3">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                        <small class="text-muted">
+                                            Total:
+                                            {{ method_exists($riwayatSurat, 'total') ? $riwayatSurat->total() : $riwayatSurat->count() }}
+                                            data
+                                        </small>
+                                        {{ $riwayatSurat->links() }}
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modal Detail (Dinamis) -->
+        <div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Detail Surat</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Jenis Surat:</strong> <span id="jenisSurat"></span></p>
+                        <p><strong>Tanggal Permintaan:</strong> <span id="tanggalPermintaan"></span></p>
+                        <p><strong>Nomor Surat:</strong> <span id="nomorSurat"></span></p>
+                        <p><strong>Status Saat Ini:</strong> <span id="statusSurat"></span></p>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Modal Detail (Dinamis) -->
-    <div class="modal fade" id="modalDetail" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detail Surat</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p><strong>Jenis Surat:</strong> <span id="jenisSurat"></span></p>
-                    <p><strong>Tanggal Permintaan:</strong> <span id="tanggalPermintaan"></span></p>
-                    <p><strong>Nomor Surat:</strong> <span id="nomorSurat"></span></p>
-                    <p><strong>Status Saat Ini:</strong> <span id="statusSurat"></span></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Riwayat (Dinamis) -->
-    <div class="modal fade" id="modalRiwayat" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Riwayat Status Surat</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Bagian</th>
-                                <th>Status</th>
-                                <th>Keterangan</th>
-                                <th>Tanggal Proses</th>
-                            </tr>
-                        </thead>
-                        <tbody id="riwayatStatusBody"></tbody>
-                    </table>
+        <!-- Modal Riwayat (Dinamis) -->
+        <div class="modal fade" id="modalRiwayat" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Riwayat Status Surat</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Bagian</th>
+                                    <th>Status</th>
+                                    <th>Keterangan</th>
+                                    <th>Tanggal Proses</th>
+                                </tr>
+                            </thead>
+                            <tbody id="riwayatStatusBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        const bagianList = ['Tata Usaha', 'Sekretaris Nagari', 'Wali Nagari'];
+        <script>
+            const bagianList = ['Tata Usaha', 'Sekretaris Nagari', 'Wali Nagari'];
 
-        const modalDetail = document.getElementById('modalDetail');
-        modalDetail.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            document.getElementById('jenisSurat').textContent = button.getAttribute('data-jenis');
-            document.getElementById('tanggalPermintaan').textContent = button.getAttribute('data-tanggal');
-            document.getElementById('nomorSurat').textContent = button.getAttribute('data-nomor');
-            document.getElementById('statusSurat').textContent = button.getAttribute('data-status');
-        });
+            const modalDetail = document.getElementById('modalDetail');
+            modalDetail.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                document.getElementById('jenisSurat').textContent = button.getAttribute('data-jenis');
+                document.getElementById('tanggalPermintaan').textContent = button.getAttribute('data-tanggal');
+                document.getElementById('nomorSurat').textContent = button.getAttribute('data-nomor');
+                document.getElementById('statusSurat').textContent = button.getAttribute('data-status');
+            });
 
-        const modalRiwayat = document.getElementById('modalRiwayat');
-        modalRiwayat.addEventListener('show.bs.modal', function(event) {
-            const button = event.relatedTarget;
-            const bagianSaatIni = button.getAttribute('data-bagian');
-            const tanggalPermintaan = button.getAttribute('data-tanggal');
-            const statusSurat = button.closest('tr').querySelector('[data-status]').getAttribute('data-status');
-            const tbody = document.getElementById('riwayatStatusBody');
-            tbody.innerHTML = '';
+            const modalRiwayat = document.getElementById('modalRiwayat');
+            modalRiwayat.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const bagianSaatIni = button.getAttribute('data-bagian');
+                const tanggalPermintaan = button.getAttribute('data-tanggal');
+                const statusSurat = button.closest('tr').querySelector('[data-status]').getAttribute('data-status');
+                const tbody = document.getElementById('riwayatStatusBody');
+                tbody.innerHTML = '';
 
-            bagianList.forEach((bagian, index) => {
-                let status = 'Menunggu';
+                bagianList.forEach((bagian, index) => {
+                    let status = 'Menunggu';
 
-                // Jika surat sudah selesai, maka semua bagian selesai
-                if (statusSurat === 'Selesai') {
-                    status = 'Selesai';
-                } else if (bagian === bagianSaatIni) {
-                    status = 'Sedang Diproses';
-                } else if (index < bagianList.indexOf(bagianSaatIni)) {
-                    status = 'Selesai';
-                }
+                    // Jika surat sudah selesai, maka semua bagian selesai
+                    if (statusSurat === 'Selesai') {
+                        status = 'Selesai';
+                    } else if (bagian === bagianSaatIni) {
+                        status = 'Sedang Diproses';
+                    } else if (index < bagianList.indexOf(bagianSaatIni)) {
+                        status = 'Selesai';
+                    }
 
-                let keterangan = {
-                    'Selesai': 'Proses telah selesai',
-                    'Sedang Diproses': 'Sedang dalam proses verifikasi',
-                    'Menunggu': 'Menunggu proses sebelumnya selesai'
-                } [status];
+                    let keterangan = {
+                        'Selesai': 'Proses telah selesai',
+                        'Sedang Diproses': 'Sedang dalam proses verifikasi',
+                        'Menunggu': 'Menunggu proses sebelumnya selesai'
+                    } [status];
 
-                let badgeClass = {
-                    'Selesai': 'success',
-                    'Sedang Diproses': 'warning',
-                    'Menunggu': 'secondary'
-                } [status];
+                    let badgeClass = {
+                        'Selesai': 'success',
+                        'Sedang Diproses': 'warning',
+                        'Menunggu': 'secondary'
+                    } [status];
 
-                const row = `<tr>
+                    const row = `<tr>
             <td>${index + 1}</td>
             <td>${bagian}</td>
             <td><span class="badge bg-${badgeClass}">${status}</span></td>
@@ -251,77 +384,77 @@
             <td>${status === 'Selesai' ? tanggalPermintaan : '-'}</td>
         </tr>`;
 
-                tbody.insertAdjacentHTML('beforeend', row);
-            });
-        });
-    </script>
-
-    <style>
-        #riwayatSuratTable tbody tr {
-            transition: background-color .15s ease;
-        }
-
-        #riwayatSuratTable tbody tr:hover {
-            background-color: #f8fafd;
-        }
-
-        #riwayat-surat .form-control:focus {
-            box-shadow: 0 0 0 .15rem rgba(13, 110, 253, .15);
-        }
-    </style>
-
-    <script>
-        (function() {
-            const input = document.getElementById('searchRiwayat');
-            if (!input) {
-                return;
-            }
-            const table = document.getElementById('riwayatSuratTable');
-            const rows = () => table.querySelectorAll('tbody tr.data-row');
-            const emptyStateServer = document.getElementById('emptyStateRow');
-
-            function applyFilter() {
-                const term = input.value.trim().toLowerCase();
-                let visible = 0;
-
-                rows().forEach(row => {
-                    const text = row.textContent.toLowerCase();
-                    const match = text.includes(term);
-                    row.style.display = match ? '' : 'none';
-                    if (match) {
-                        visible++;
-                    }
+                    tbody.insertAdjacentHTML('beforeend', row);
                 });
+            });
+        </script>
 
-                if (!rows().length) {
+        <style>
+            #riwayatSuratTable tbody tr {
+                transition: background-color .15s ease;
+            }
+
+            #riwayatSuratTable tbody tr:hover {
+                background-color: #f8fafd;
+            }
+
+            #riwayat-surat .form-control:focus {
+                box-shadow: 0 0 0 .15rem rgba(13, 110, 253, .15);
+            }
+        </style>
+
+        <script>
+            (function() {
+                const input = document.getElementById('searchRiwayat');
+                if (!input) {
                     return;
                 }
+                const table = document.getElementById('riwayatSuratTable');
+                const rows = () => table.querySelectorAll('tbody tr.data-row');
+                const emptyStateServer = document.getElementById('emptyStateRow');
 
-                if (term && visible === 0) {
-                    if (!document.getElementById('emptyStateClient')) {
-                        const tr = document.createElement('tr');
-                        tr.id = 'emptyStateClient';
-                        tr.innerHTML = `<td colspan="7" class="text-center py-5">
+                function applyFilter() {
+                    const term = input.value.trim().toLowerCase();
+                    let visible = 0;
+
+                    rows().forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        const match = text.includes(term);
+                        row.style.display = match ? '' : 'none';
+                        if (match) {
+                            visible++;
+                        }
+                    });
+
+                    if (!rows().length) {
+                        return;
+                    }
+
+                    if (term && visible === 0) {
+                        if (!document.getElementById('emptyStateClient')) {
+                            const tr = document.createElement('tr');
+                            tr.id = 'emptyStateClient';
+                            tr.innerHTML = `<td colspan="7" class="text-center py-5">
                                 <div class="text-muted">
                                     <i class="bi bi-search display-6 d-block mb-2"></i>
                                     Tidak ditemukan hasil untuk pencarian "<strong>${term}</strong>"
                                 </div>
                             </td>`;
-                        table.querySelector('tbody').appendChild(tr);
+                            table.querySelector('tbody').appendChild(tr);
+                        }
+                    } else {
+                        const clientEmpty = document.getElementById('emptyStateClient');
+                        if (clientEmpty) {
+                            clientEmpty.remove();
+                        }
                     }
-                } else {
-                    const clientEmpty = document.getElementById('emptyStateClient');
-                    if (clientEmpty) {
-                        clientEmpty.remove();
+
+                    if (emptyStateServer) {
+                        emptyStateServer.style.display = (rows().length === 0 || term) ? 'none' : '';
                     }
                 }
 
-                if (emptyStateServer) {
-                    emptyStateServer.style.display = (rows().length === 0 || term) ? 'none' : '';
-                }
-            }
-
-            input.addEventListener('input', applyFilter);
-        })();
-    </script>
-@endsection
+                input.addEventListener('input', applyFilter);
+            })();
+        </script>
+    @endsection

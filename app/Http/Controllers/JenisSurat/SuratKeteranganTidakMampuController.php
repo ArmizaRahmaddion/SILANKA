@@ -71,10 +71,10 @@ class SuratKeteranganTidakMampuController extends Controller
             $keperluan = ucfirst(strtolower($request->keperluan));
 
             // Anak
-            $anak = array_map(fn ($v) => is_string($v) ? ucwords(strtolower($v)) : $v, $request->anak);
+            $anak = array_map(fn($v) => is_string($v) ? ucwords(strtolower($v)) : $v, $request->anak);
 
             // Orang tua
-            $ortu = array_map(fn ($v) => is_string($v) ? ucwords(strtolower($v)) : $v, $request->ortu);
+            $ortu = array_map(fn($v) => is_string($v) ? ucwords(strtolower($v)) : $v, $request->ortu);
 
             // Simpan ke permintaan_surat
             $permintaan = PermintaanSurat::create([
@@ -127,7 +127,7 @@ class SuratKeteranganTidakMampuController extends Controller
 
             return redirect()->route('surat.sktm');
         } catch (\Exception $e) {
-            Alert::error('Gagal!', 'Terjadi kesalahan: '.$e->getMessage());
+            Alert::error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
 
             return back()->withInput();
         }
@@ -176,10 +176,10 @@ class SuratKeteranganTidakMampuController extends Controller
             $keperluan = ucfirst(strtolower($request->keperluan));
 
             // Anak
-            $anak = array_map(fn ($v) => is_string($v) ? ucwords(strtolower($v)) : $v, $request->anak);
+            $anak = array_map(fn($v) => is_string($v) ? ucwords(strtolower($v)) : $v, $request->anak);
 
             // Orang tua
-            $ortu = array_map(fn ($v) => is_string($v) ? ucwords(strtolower($v)) : $v, $request->ortu);
+            $ortu = array_map(fn($v) => is_string($v) ? ucwords(strtolower($v)) : $v, $request->ortu);
 
             // Update data surat
             $surat->update([
@@ -224,7 +224,7 @@ class SuratKeteranganTidakMampuController extends Controller
 
             return redirect()->route('surat.sktm');
         } catch (\Exception $e) {
-            Alert::error('Gagal!', 'Terjadi kesalahan: '.$e->getMessage());
+            Alert::error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
 
             return back()->withInput();
         }
@@ -254,7 +254,7 @@ class SuratKeteranganTidakMampuController extends Controller
 
             return view('layouts.admin.layanan.e-surat.sktm.template-with-barcode', compact('sktm', 'suratTerbit', 'verifikasi'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -278,7 +278,7 @@ class SuratKeteranganTidakMampuController extends Controller
                 return redirect()->route('sktm.preview', $id);
             }
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -297,7 +297,7 @@ class SuratKeteranganTidakMampuController extends Controller
 
             return view('layouts.admin.layanan.e-surat.sktm.preview', compact('sktm', 'suratTerbit'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -325,7 +325,42 @@ class SuratKeteranganTidakMampuController extends Controller
 
             return view('layouts.admin.layanan.e-surat.sktm.preview-verified', compact('sktm', 'suratTerbit', 'verifikasi'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
+        }
+    }
+
+    public function ajukanTtd($suratId)
+    {
+        try {
+            // Cari data surat berdasarkan ID (misalnya SKKM)
+            $surat = SuratKeteranganTidakMampu::findOrFail($suratId);
+            $permintaanSurat = $surat->permintaanSurat;
+            $suratTerbit = $permintaanSurat->suratTerbit->first();
+
+            // Validasi status surat harus "Diterima"
+            if ($permintaanSurat->status !== 'Diterima') {
+                return redirect()->back()->with('error', 'Surat harus berstatus "Diterima" untuk dapat diajukan TTD.');
+            }
+
+            // Cek apakah sudah pernah diajukan
+            $existingVerifikasi = VerifikasiSuratFinal::where('surat_terbit_id', $suratTerbit->id)->first();
+            if ($existingVerifikasi) {
+                return redirect()->back()->with('error', 'Surat ini sudah pernah diajukan untuk verifikasi.');
+            }
+
+            // Buat record verifikasi baru
+            VerifikasiSuratFinal::create([
+                'surat_terbit_id' => $suratTerbit->id,
+                'jenis_surat_id' => $permintaanSurat->jenis_surat_id,
+                'permintaan_surat_id' => $permintaanSurat->id,
+                'barcode' => null, // akan diisi saat verifikasi
+                'verified_at' => null,
+                'verified_by' => null,
+            ]);
+
+            return redirect()->back()->with('success', 'Pengajuan TTD berhasil dikirim ke sekretaris untuk verifikasi.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 

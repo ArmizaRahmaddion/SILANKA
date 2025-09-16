@@ -15,11 +15,9 @@ class CekSuratController extends Controller
     /**
      * Halaman form cek surat
      */
-    public function checkForm(Request $request)
+    public function checkForm()
     {
-        $code = $request->get('code');
-
-        return view('layouts.landing-page.check-validitas-surat.check-surat', compact('code'));
+        return view('layouts.landing-page.check-validitas-surat.check-surat');
     }
 
     /**
@@ -74,97 +72,45 @@ class CekSuratController extends Controller
         try {
             // Ambil data verifikasi + relasi
             $verifikasi = VerifikasiSuratFinal::with([
-                'suratTerbit',
                 'jenisSurat',
-                'permintaanSurat',
+                'suratTerbit',
+                'verifiedBy',
             ])->findOrFail($verifikasiId);
 
             // Cek status verifikasi surat
             if (! $verifikasi->verified_at) {
-                return redirect()->back()
-                    ->with('error', 'Surat belum diverifikasi.');
+                return redirect()->back()->with('error', 'Surat belum diverifikasi.');
             }
 
-            // Pilih proses berdasarkan kode surat
-            switch ($verifikasi->jenisSurat->kode_surat) {
+            $kodeSurat = $verifikasi->jenisSurat->kode_surat;
 
-                /* ======================= SKKM ======================= */
-                case 'SKKM':
-                    $suratData = SuratKeteranganMeninggalDunia::where(
-                        'permintaan_surat_id',
-                        $verifikasi->permintaan_surat_id
-                    )->first();
+            $suratData = match ($kodeSurat) {
+                'SKKM' => SuratKeteranganMeninggalDunia::where('permintaan_surat_id', $verifikasi->permintaan_surat_id)->first(),
+                'SKD' => SuratKeteranganDomisili::where('permintaan_surat_id', $verifikasi->permintaan_surat_id)->first(),
+                'SKU' => SuratKeteranganUsaha::where('permintaan_surat_id', $verifikasi->permintaan_surat_id)->first(),
+                'SKTM' => SuratKeteranganTidakMampu::where('permintaan_surat_id', $verifikasi->permintaan_surat_id)->first(),
+                default => null,
+            };
 
-                    if (! $suratData) {
-                        return redirect()->back()
-                            ->with('error', 'Data SKKM tidak ditemukan.');
-                    }
-
-                    return view(
-                        'layouts.landing-page.check-validitas-surat.skkm-print',
-                        compact('suratData', 'verifikasi')
-                    );
-
-                    /* ======================= SKD ======================== */
-                case 'SKD':
-                    $suratData = SuratKeteranganDomisili::where(
-                        'permintaan_surat_id',
-                        $verifikasi->permintaan_surat_id
-                    )->first();
-
-                    if (! $suratData) {
-                        return redirect()->back()
-                            ->with('error', 'Data SKD tidak ditemukan.');
-                    }
-
-                    return view(
-                        'layouts.landing-page.check-validitas-surat.skd-print',
-                        compact('suratData', 'verifikasi')
-                    );
-
-                    /* ======================= SKU ======================== */
-                case 'SKU':
-                    $suratData = SuratKeteranganUsaha::where(
-                        'permintaan_surat_id',
-                        $verifikasi->permintaan_surat_id
-                    )->first();
-
-                    if (! $suratData) {
-                        return redirect()->back()
-                            ->with('error', 'Data SKU tidak ditemukan.');
-                    }
-
-                    return view(
-                        'layouts.landing-page.check-validitas-surat.sku-print',
-                        compact('suratData', 'verifikasi')
-                    );
-
-                    /* ======================= SKTM ======================== */
-                case 'SKTM':
-                    $suratData = SuratKeteranganTidakMampu::where(
-                        'permintaan_surat_id',
-                        $verifikasi->permintaan_surat_id
-                    )->first();
-
-                    if (! $suratData) {
-                        return redirect()->back()
-                            ->with('error', 'Data SKTM tidak ditemukan.');
-                    }
-
-                    return view(
-                        'layouts.landing-page.check-validitas-surat.sktm-print',
-                        compact('suratData', 'verifikasi')
-                    );
-
-                    /* ============ Tambahkan case lain di sini ============ */
-
-                default:
-                    return redirect()->back()
-                        ->with('error', 'Jenis surat tidak didukung untuk print.');
+            if (! $suratData) {
+                return redirect()->back()->with('error', 'Data surat tidak ditemukan.');
             }
+
+            $view = match ($kodeSurat) {
+                'SKKM' => 'layouts.landing-page.check-validitas-surat.skkm-print',
+                'SKD' => 'layouts.landing-page.check-validitas-surat.skd-print',
+                'SKU' => 'layouts.landing-page.check-validitas-surat.sku-print',
+                'SKTM' => 'layouts.landing-page.check-validitas-surat.sktm-print',
+                default => null,
+            };
+
+            if (! $view) {
+                return redirect()->back()->with('error', 'Jenis surat tidak didukung untuk print.');
+            }
+
+            return view($view, compact('suratData', 'verifikasi'));
         } catch (\Exception $e) {
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
     }
 }

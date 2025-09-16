@@ -95,7 +95,7 @@ class SuratKeteranganUsahaController extends Controller
 
             return redirect()->route('surat.sku');
         } catch (\Exception $e) {
-            Alert::error('Gagal!', 'Terjadi kesalahan: '.$e->getMessage());
+            Alert::error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
 
             return redirect()->back()->withInput();
         }
@@ -156,7 +156,7 @@ class SuratKeteranganUsahaController extends Controller
 
             return redirect()->route('sku.index');
         } catch (\Exception $e) {
-            Alert::error('Gagal!', 'Terjadi kesalahan: '.$e->getMessage());
+            Alert::error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
 
             return redirect()->back()->withInput();
         }
@@ -186,7 +186,7 @@ class SuratKeteranganUsahaController extends Controller
 
             return view('layouts.admin.layanan.e-surat.sku.template-with-barcode', compact('sku', 'suratTerbit', 'verifikasi'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -210,7 +210,7 @@ class SuratKeteranganUsahaController extends Controller
                 return redirect()->route('sku.preview', $id);
             }
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -229,7 +229,7 @@ class SuratKeteranganUsahaController extends Controller
 
             return view('layouts.admin.layanan.e-surat.sku.preview', compact('sku', 'suratTerbit'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
 
@@ -257,9 +257,10 @@ class SuratKeteranganUsahaController extends Controller
 
             return view('layouts.admin.layanan.e-surat.sku.preview-verified', compact('sku', 'suratTerbit', 'verifikasi'));
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Data tidak ditemukan: ' . $e->getMessage());
         }
     }
+
 
     public function ajukanTtd($suratId)
     {
@@ -292,7 +293,7 @@ class SuratKeteranganUsahaController extends Controller
 
             return redirect()->back()->with('success', 'Pengajuan TTD berhasil dikirim ke sekretaris untuk verifikasi.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 }

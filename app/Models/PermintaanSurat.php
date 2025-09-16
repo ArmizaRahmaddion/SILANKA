@@ -32,7 +32,7 @@ class PermintaanSurat extends Model
     /**
      * Relasi ke Surat
      */
-    public function SuratKeteranganMeninggalDunia()
+    public function suratKeteranganMeninggalDunia()
     {
         return $this->hasOne(SuratKeteranganMeninggalDunia::class, 'permintaan_surat_id');
     }
