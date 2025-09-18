@@ -99,8 +99,9 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="#"><span><i class="bi bi-clock-history me-2"
-                                                style="font-size: 1rem;"></i>Riwayat Pengaduan</span>
+                                    <a href="{{ route('riwayat-pengaduan.index') }}"><span><i
+                                                class="bi bi-clock-history me-2" style="font-size: 1rem;"></i>Riwayat
+                                            Pengaduan</span>
                                     </a>
                                 </li>
                                 <li class="border-top mt-2 pt-2">

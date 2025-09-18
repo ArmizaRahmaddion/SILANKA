@@ -15,6 +15,7 @@ use App\Http\Controllers\PengaduanController;
 use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\PerangkatNagariController;
 use App\Http\Controllers\PermintaanSuratController;
+use App\Http\Controllers\RiwayatPengaduanController;
 use App\Http\Controllers\RiwayatSuratController;
 use App\Http\Controllers\SuratController;
 use App\Http\Controllers\SuratTerbitController;
@@ -77,6 +78,10 @@ Route::middleware(['auth', 'role:masyarakat|superadmin'])->group(function () {
         Route::get('/riwayat-surat', [RiwayatSuratController::class, 'index'])->name('riwayat-surat.index');
         Route::get('/riwayat-surat/{id}/status', [RiwayatSuratController::class, 'getRiwayatStatus'])->name('riwayat-surat.status');
         Route::get('/riwayat-surat/{id}/detail', [RiwayatSuratController::class, 'getdetailSurat'])->name('riwayat-surat.detail');
+
+        // Riwayat Pengaduan
+        Route::get('/riwayat-pengaduan', [RiwayatPengaduanController::class, 'index'])->name('riwayat-pengaduan.index');
+        Route::get('/riwayat-pengaduan/{id}/detail', [RiwayatPengaduanController::class, 'getDetailPengaduan'])->name('riwayat-pengaduan.detail');
 
         // Form Surat
         Route::get('/surat/skaw', [SuratKeteranganAhliWarisController::class, 'create'])->name('surat.skaw');
