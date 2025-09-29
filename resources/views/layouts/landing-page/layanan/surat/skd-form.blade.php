@@ -135,8 +135,8 @@
                                                 <select name="jenis_kelamin" id="jenis_kelamin" class="form-select"
                                                     required>
                                                     <option value="">Pilih Jenis Kelamin</option>
-                                                    <option value="Laki-laki"
-                                                        {{ old('jenis_kelamin') == 'Laki-laki' ? 'selected' : '' }}>
+                                                    <option value="Laki-Laki"
+                                                        {{ old('jenis_kelamin') == 'Laki-Laki' ? 'selected' : '' }}>
                                                         Laki-laki
                                                     </option>
                                                     <option value="Perempuan"

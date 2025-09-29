@@ -432,7 +432,7 @@
         function confirmAjukanTtd(id, kodeSurat, nomorSurat) {
             document.getElementById('nomorSuratTtd').textContent = nomorSurat;
             const form = document.getElementById('formAjukanTtd');
-            form.action = `/surat/${kodeSurat}/${id}/ajukan-ttd`;
+            form.action = `/${kodeSurat}/${id}/ajukan-ttd`;
             const ttdModal = new bootstrap.Modal(document.getElementById('modalAjukanTtd'));
             ttdModal.show();
         }

@@ -48,11 +48,11 @@ class VerifikasiSuratFinalController extends Controller
             }
 
             $nomorSurat = $verifikasi->suratTerbit->nomor_surat;
-            $uniqueCode = $nomorSurat.'-'.time().'-'.Str::random(6);
+            $uniqueCode = $nomorSurat . '-' . time() . '-' . Str::random(6);
 
             // Generate URL untuk cek surat
             // $checkUrl = route('surat.check.form') . '?code=' . urlencode($uniqueCode);
-            $checkUrl = url(route('surat.check.form', [], false)).'?code='.urlencode($uniqueCode);
+            $checkUrl = url(route('surat.check.form', [], false)) . '?code=' . urlencode($uniqueCode);
 
             // Generate QR Code dengan URL cek surat
             $barcodePath = $this->generateQrCodeWithGD($checkUrl);
@@ -74,7 +74,7 @@ class VerifikasiSuratFinalController extends Controller
 
             return redirect()->route('verifikasi.index')->with('success', 'Surat berhasil diverifikasi dan barcode telah digenerate.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -113,12 +113,12 @@ class VerifikasiSuratFinalController extends Controller
             // Pastikan folder ada
             Storage::disk('public')->makeDirectory('barcodes');
 
-            $filename = $filename ?? 'barcode_'.time().'.svg';
-            Storage::disk('public')->put('barcodes/'.$filename, $qrCode);
+            $filename = $filename ?? 'barcode_' . time() . '.svg';
+            Storage::disk('public')->put('barcodes/' . $filename, $qrCode);
 
-            return 'barcodes/'.$filename;
+            return 'barcodes/' . $filename;
         } catch (\Exception $e) {
-            \Log::error('QR Code generation error: '.$e->getMessage());
+            \Log::error('QR Code generation error: ' . $e->getMessage());
 
             return null;
         }
@@ -142,7 +142,7 @@ class VerifikasiSuratFinalController extends Controller
                 case 'SKTM':
                     $surat = SuratKeteranganTidakMampu::findOrFail($suratId);
                     break;
-                    // Tambahkan jenis surat lainnya di sini
+                // Tambahkan jenis surat lainnya di sini
                 default:
                     return redirect()->back()->with('error', 'Jenis surat tidak dikenali.');
             }
@@ -172,7 +172,7 @@ class VerifikasiSuratFinalController extends Controller
 
             return redirect()->back()->with('success', 'Pengajuan TTD berhasil dikirim.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: '.$e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 }
