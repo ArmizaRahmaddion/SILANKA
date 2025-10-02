@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PermintaanSurat;
 use App\Models\RiwayatStatus;
+use App\Models\StatusPermintaanSurat;
 use App\Models\VerifikasiPengguna;
 use App\Models\VerifikasiSuratFinal;
 use Illuminate\Support\Facades\Auth;
@@ -21,30 +22,110 @@ class RiwayatSuratController extends Controller
             return redirect()->back()->with('error', 'Data verifikasi pengguna tidak ditemukan.');
         }
 
-        // Ambil permintaan surat berdasarkan verifikasi_pengguna_id
-        // $riwayatSurat = PermintaanSurat::with([
-        //     'jenisSurat',
-        //     'suratTerbit',
-        //     'verifikasiPengguna',
-        // ])
-        //     ->where('verifikasi_pengguna_id', $verifikasiPengguna->id)
-        //     ->orderBy('tanggal_permintaan', 'desc')
-        //     ->get();
-
-        $riwayatSurat = VerifikasiSuratFinal::with([
-            'suratTerbit',
-            'permintaanSurat',
+        // Ambil semua permintaan surat user (tidak hanya yang sudah verified)
+        $riwayatSurat = PermintaanSurat::with([
             'jenisSurat',
-            'permintaanSurat.suratKeteranganMeninggalDunia',
-            'permintaanSurat.suratKeteranganDomisili',
-            'permintaanSurat.suratKeteranganUsaha',
-            'verifiedBy',
+            'suratTerbit',
+            'verifikasiPengguna',
+            'statusPermintaan' => function ($query) {
+                $query->with('user')->orderBy('tanggal_perubahan', 'desc');
+            },
+            'latestStatusPermintaan.user',
+            'suratKeteranganMeninggalDunia',
+            'suratKeteranganDomisili',
+            'suratKeteranganUsaha',
+            'suratKeteranganTidakMampu'
         ])
-            ->whereNotNull('verified_at')
-            ->orderBy('verified_at', 'desc')
-            ->get();
+            ->where('verifikasi_pengguna_id', $verifikasiPengguna->id)
+            ->orderBy('tanggal_permintaan', 'desc')
+            ->paginate(10);
 
         return view('layouts.landing-page.riwayat.surat.index', compact('riwayatSurat'));
+    }
+
+    /**
+     * Get detail riwayat status untuk modal
+     */
+    public function getRiwayatStatus($permintaanSuratId)
+    {
+        $permintaanSurat = PermintaanSurat::with([
+            'statusPermintaan' => function ($query) {
+                $query->with('user')->orderBy('tanggal_perubahan', 'asc');
+            }
+        ])->findOrFail($permintaanSuratId);
+
+        $bagianList = ['Tata Usaha', 'Sekretaris Nagari', 'Wali Nagari'];
+        $riwayatStatus = [];
+
+        // Buat tracking berdasarkan status yang ada
+        $statusData = $permintaanSurat->statusPermintaan->groupBy('status');
+
+        foreach ($bagianList as $index => $bagian) {
+            $status = 'Menunggu';
+            $tanggalProses = null;
+            $keterangan = 'Menunggu proses sebelumnya selesai';
+            $petugas = '-';
+
+            // Tentukan status berdasarkan data yang ada
+            if ($permintaanSurat->status === 'Selesai') {
+                $status = 'Selesai';
+                $keterangan = 'Proses telah selesai';
+                $tanggalProses = $permintaanSurat->updated_at->format('d/m/Y H:i');
+                if ($statusSelesai = $statusData->get('Selesai')?->first()) {
+                    $tanggalProses = $statusSelesai->tanggal_perubahan->format('d/m/Y H:i');
+                    $petugas = $statusSelesai->user->name ?? 'System';
+                }
+            } elseif ($permintaanSurat->status === 'Ditolak') {
+                if ($bagian === 'Tata Usaha') {  // Asumsi ditolak di Tata Usaha
+                    $status = 'Ditolak';
+                    $keterangan = $permintaanSurat->keterangan ?? 'Surat ditolak';
+                    $tanggalProses = $permintaanSurat->updated_at->format('d/m/Y H:i');
+                    if ($statusDitolak = $statusData->get('Ditolak')?->first()) {
+                        $tanggalProses = $statusDitolak->tanggal_perubahan->format('d/m/Y H:i');
+                        $petugas = $statusDitolak->user->name ?? 'System';
+                    }
+                }
+            } else {
+                // Status masih Diproses/Diterima - tentukan berdasarkan status
+                if ($permintaanSurat->status === 'Diproses' && $bagian === 'Tata Usaha') {
+                    $status = 'Sedang Diproses';
+                    $keterangan = 'Sedang dalam proses verifikasi di Tata Usaha';
+                    $tanggalProses = $permintaanSurat->tanggal_permintaan->format('d/m/Y H:i');
+                } elseif ($permintaanSurat->status === 'Diterima') {
+                    if ($bagian === 'Sekretaris Nagari') {
+                        $status = 'Sedang Diproses';
+                        $keterangan = 'Sedang dalam proses verifikasi di Sekretaris Nagari';
+                        $tanggalProses = $permintaanSurat->updated_at->format('d/m/Y H:i');
+                    } elseif ($bagian === 'Tata Usaha') {
+                        $status = 'Selesai';
+                        $keterangan = 'Telah disetujui Tata Usaha';
+                        $tanggalProses = $permintaanSurat->updated_at->format('d/m/Y H:i');
+                    }
+                }
+
+                // Override dengan data status jika ada
+                if ($latestStatus = $permintaanSurat->latestStatusPermintaan) {
+                    if ($latestStatus->bagian === $bagian) {
+                        $status = 'Sedang Diproses';
+                        $tanggalProses = $latestStatus->tanggal_perubahan->format('d/m/Y H:i');
+                        $petugas = $latestStatus->user->name ?? 'System';
+                    }
+                }
+            }
+
+            $riwayatStatus[] = [
+                'bagian' => $bagian,
+                'status' => $status,
+                'keterangan' => $keterangan,
+                'tanggal_proses' => $tanggalProses,
+                'petugas' => $petugas
+            ];
+        }
+
+        return response()->json([
+            'permintaan_surat' => $permintaanSurat,
+            'riwayat_status' => $riwayatStatus
+        ]);
     }
 
     // public function getRiwayatStatus($id)

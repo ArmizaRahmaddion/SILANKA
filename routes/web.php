@@ -125,7 +125,7 @@ Route::middleware(['auth', 'role:masyarakat|superadmin'])->group(function () {
 | Print Surat Final
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:masyarakat|seknag'])->group(function () {
+Route::middleware(['auth', 'role:masyarakat|seknag|superadmin'])->group(function () {
     Route::get('/skd/{id}/print', [SuratKeteranganDomisiliController::class, 'print'])->name('skd.print');
     Route::get('/skkm/{id}/print', [SuratKeteranganMeniggalDuniaController::class, 'print'])->name('skkm.print');
     Route::get('/sku/{id}/print', [SuratKeteranganUsahaController::class, 'print'])->name('sku.print');
@@ -216,6 +216,7 @@ Route::middleware(['auth', 'role:superadmin|seknag|staff-tu'])->group(function (
     Route::get('/permintaan-surat', [PermintaanSuratController::class, 'index'])->name('permintaan.surat');
     Route::get('/permintaan-surat/{id}/buat-surat', [SuratTerbitController::class, 'showBuatSurat'])->name('permintaan-surat.buat-surat');
     Route::post('/permintaan-surat/{id}/simpan-surat', [SuratTerbitController::class, 'simpanSurat'])->name('permintaan-surat.simpan-surat');
+    Route::post('/permintaan-surat/{id}/tolak', [SuratTerbitController::class, 'tolakSurat'])->name('permintaan-surat.tolak');
 
     // Pengaduan Admin
     Route::get('/admin/e-aduan', [PengaduanController::class, 'index'])->name('pengaduan.index');

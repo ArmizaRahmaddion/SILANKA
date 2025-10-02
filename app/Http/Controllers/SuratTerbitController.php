@@ -10,6 +10,76 @@ use RealRashid\SweetAlert\Facades\Alert;
 class SuratTerbitController extends Controller
 {
     /**
+     * Menolak permintaan surat
+     */
+    public function tolakSurat(Request $request, $id)
+    {
+        try {
+            // Validasi hanya untuk alasan penolakan, abaikan field lainnya
+            $request->validate([
+                'alasan' => 'required|string|max:500',
+            ], [
+                'alasan.required' => 'Alasan penolakan wajib diisi.',
+                'alasan.max' => 'Alasan penolakan maksimal 500 karakter.'
+            ]);
+
+            $alasanPenolakan = $request->input('alasan');
+
+            $permintaan = PermintaanSurat::with([
+                'suratKeteranganMeninggalDunia',
+                'suratKeteranganDomisili',
+                'suratKeteranganUsaha',
+                'suratKeteranganTidakMampu'
+            ])->findOrFail($id);
+
+            if ($permintaan->status !== 'Diproses') {
+                Alert::error('Gagal!', 'Permintaan surat ini sudah diproses atau tidak dapat diubah.');
+                return redirect()->route('permintaan.surat');
+            }
+
+            // Hapus data surat terkait berdasarkan jenis surat
+            $jenisSuratId = $permintaan->jenis_surat_id;
+
+            switch ($jenisSuratId) {
+                case 1: // Surat Keterangan Tidak Mampu
+                    if ($permintaan->suratKeteranganTidakMampu) {
+                        $permintaan->suratKeteranganTidakMampu->delete();
+                    }
+                    break;
+                case 2: // Surat Keterangan Domisili
+                    if ($permintaan->suratKeteranganDomisili) {
+                        $permintaan->suratKeteranganDomisili->delete();
+                    }
+                    break;
+                case 3: // Surat Keterangan Meninggal Dunia
+                    if ($permintaan->suratKeteranganMeninggalDunia) {
+                        $permintaan->suratKeteranganMeninggalDunia->delete();
+                    }
+                    break;
+                case 4: // Surat Keterangan Usaha
+                    if ($permintaan->suratKeteranganUsaha) {
+                        $permintaan->suratKeteranganUsaha->delete();
+                    }
+                    break;
+            }
+
+            // Update status dan keterangan permintaan surat
+            $permintaan->update([
+                'status' => 'Ditolak',
+                'keterangan' => $alasanPenolakan
+            ]);
+
+            Alert::success('Berhasil!', 'Permintaan surat berhasil ditolak dan data surat telah dihapus.');
+            return redirect()->route('permintaan.surat');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Alert::error('Gagal!', 'Data tidak valid: ' . implode(', ', $e->validator->errors()->all()));
+            return redirect()->back()->withErrors($e->validator)->withInput();
+        } catch (\Exception $e) {
+            Alert::error('Gagal!', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()->withInput();
+        }
+    }
+    /**
      * Menampilkan halaman form buat surat
      */
     public function showBuatSurat($id)
@@ -90,6 +160,11 @@ class SuratTerbitController extends Controller
     public function simpanSurat(Request $request, $id)
     {
         try {
+            // Pastikan ini bukan request penolakan
+            if ($request->has('alasan')) {
+                return $this->tolakSurat($request, $id);
+            }
+
             // Validasi input nomor surat
             $validated = $request->validate([
                 'nomor_surat' => 'required|string|max:100|unique:surat_terbit,nomor_surat',

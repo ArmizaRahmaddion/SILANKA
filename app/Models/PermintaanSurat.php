@@ -56,4 +56,51 @@ class PermintaanSurat extends Model
     {
         return $this->hasMany(SuratTerbit::class, 'permintaan_surat_id');
     }
+
+    /**
+     * Relasi ke StatusPermintaanSurat untuk tracking riwayat
+     */
+    public function statusPermintaan()
+    {
+        return $this->hasMany(StatusPermintaanSurat::class, 'permintaan_surat_id');
+    }
+
+    /**
+     * Get status terakhir dari riwayat status
+     */
+    public function latestStatusPermintaan()
+    {
+        return $this->hasOne(StatusPermintaanSurat::class, 'permintaan_surat_id')
+            ->latest('tanggal_perubahan');
+    }
+
+    /**
+     * Get bagian saat ini berdasarkan status terakhir
+     */
+    public function getBagianSaatIniAttribute()
+    {
+        $latestStatus = $this->latestStatusPermintaan;
+
+        if (!$latestStatus || !$latestStatus->user) {
+            return 'Tata Usaha'; // Default
+        }
+
+        return $latestStatus->bagian;
+    }
+
+    /**
+     * Get progress status untuk riwayat
+     */
+    public function getProgressStatusAttribute()
+    {
+        $bagianList = ['Tata Usaha', 'Sekretaris Nagari', 'Wali Nagari'];
+        $bagianSaatIni = $this->bagian_saat_ini;
+
+        return [
+            'current_bagian' => $bagianSaatIni,
+            'current_index' => array_search($bagianSaatIni, $bagianList),
+            'total_steps' => count($bagianList),
+            'progress_percentage' => (array_search($bagianSaatIni, $bagianList) + 1) / count($bagianList) * 100
+        ];
+    }
 }

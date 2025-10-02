@@ -46,9 +46,10 @@
                                 </div>
                                 <div class="d-flex align-items-center gap-2 small flex-wrap">
                                     <span class="badge bg-success">Selesai</span>
-                                    <span class="badge bg-warning text-dark">Sedang Diproses</span>
-                                    <span class="badge bg-secondary">Menunggu</span>
+                                    <span class="badge bg-info">Diterima</span>
+                                    <span class="badge bg-warning text-dark">Diproses</span>
                                     <span class="badge bg-danger">Ditolak</span>
+                                    <span class="badge bg-secondary">Batal</span>
                                 </div>
                             </div>
                         </div>
@@ -141,124 +142,132 @@
                                     </tbody> --}}
 
                                     <tbody>
-                                        @forelse ($riwayatSurat as $riwayat)
-                                            <tr>
-                                                <td>{{ $loop->iteration }}</td>
-                                                <td>
-                                                    <strong>{{ $riwayat->suratTerbit->nomor_surat ?? '-' }}</strong>
+                                        @forelse ($riwayatSurat as $surat)
+                                            @php
+                                                // Tentukan badge class berdasarkan status
+                                                $statusBadgeMap = [
+                                                    'Selesai' => 'success',
+                                                    'Diterima' => 'info',
+                                                    'Diproses' => 'warning',
+                                                    'Ditolak' => 'danger',
+                                                    'Batal' => 'secondary',
+                                                ];
+                                                $badgeClass = $statusBadgeMap[$surat->status] ?? 'secondary';
+
+                                                // Ambil nomor surat dari relasi suratTerbit
+                                                $nomorSurat = optional($surat->suratTerbit->first())->nomor_surat;
+
+                                                // Tentukan bagian saat ini berdasarkan status terakhir
+                                                $bagianSaatIni = $surat->bagian_saat_ini;
+                                            @endphp
+                                            <tr class="data-row">
+                                                <td class="text-center fw-semibold">{{ $loop->iteration }}</td>
+                                                <td class="fw-medium">
+                                                    {{ $nomorSurat ?? '—' }}
+                                                    @if (!$nomorSurat && $surat->status !== 'Ditolak')
+                                                        <br><small class="text-muted">Belum diproses</small>
+                                                    @endif
                                                 </td>
+                                                <td>{{ $surat->jenisSurat->nama_surat ?? '—' }}</td>
                                                 <td>
-                                                    {{ $riwayat->jenisSurat->nama_surat ?? '-' }}
-                                                </td>
-                                                <td>
-                                                    {{ $riwayat->verified_at->format('d/m/Y H:i') }}
+                                                    <span class="text-nowrap">
+                                                        {{ $surat->tanggal_permintaan->format('d/m/Y') }}
+                                                    </span>
                                                     <br><small
-                                                        class="text-muted">{{ $riwayat->verified_at->diffForHumans() }}</small>
+                                                        class="text-muted">{{ $surat->tanggal_permintaan->diffForHumans() }}</small>
                                                 </td>
                                                 <td>
-                                                    @if ($riwayat->permintaanSurat->status === 'Selesai')
-                                                        <span class="badge bg-success">
-                                                            <i class="ri-qr-code-line"></i>
-                                                            {{ $riwayat->permintaanSurat->status }}
-                                                        </span>
-                                                    @else
-                                                        <span class="badge bg-secondary">
-                                                            <i class="ri-close-line"></i>
-                                                            {{ $riwayat->permintaanSurat->status }}
-                                                        </span>
+                                                    <span class="badge bg-{{ $badgeClass }}">
+                                                        {{ $surat->status }}
+                                                    </span>
+                                                    @if ($surat->status === 'Ditolak' && !empty($surat->keterangan))
+                                                        <br><small
+                                                            class="text-danger">{{ Str::limit($surat->keterangan, 30) }}</small>
+                                                    @elseif (in_array($surat->status, ['Diproses', 'Diterima']) && $bagianSaatIni)
+                                                        <br><small class="text-info">Di {{ $bagianSaatIni }}</small>
                                                     @endif
                                                 </td>
                                                 <td>
                                                     <button type="button"
                                                         class="btn btn-outline-info btn-sm px-3 d-inline-flex align-items-center gap-1"
                                                         data-bs-toggle="modal" data-bs-target="#modalDetail"
-                                                        data-jenis="{{ $riwayat->jenisSurat->nama_surat ?? '-' }}"
-                                                        data-tanggal="{{ $riwayat->permintaanSurat->tanggal_permintaan->translatedFormat('d F Y') }}"
-                                                        data-nomor="{{ $riwayat->suratTerbit->nomor_surat ?? '-' }}"
-                                                        data-status="{{ $riwayat->permintaanSurat->status }}">
+                                                        data-jenis="{{ $surat->jenisSurat->nama_surat ?? '-' }}"
+                                                        data-tanggal="{{ $surat->tanggal_permintaan->translatedFormat('d F Y') }}"
+                                                        data-nomor="{{ $nomorSurat ?? '-' }}"
+                                                        data-status="{{ $surat->status }}"
+                                                        data-bagian="{{ $bagianSaatIni }}">
                                                         <i class="bi bi-eye"></i><span>Detail</span>
                                                     </button>
                                                 </td>
                                                 <td>
-                                                    <div class="d-flex gap-1">
+                                                    <div class="d-flex gap-1 flex-wrap">
                                                         <button type="button"
                                                             class="btn btn-primary btn-sm px-3 d-inline-flex align-items-center gap-1"
-                                                            data-bs-toggle="modal" data-bs-target="#modalRiwayat"
-                                                            data-bagian="{{ $riwayat->bagian_saat_ini ?? 'Tata Usaha' }}"
-                                                            data-status="{{ $riwayat->permintaanSurat->status }}"
-                                                            data-tanggal="{{ $riwayat->permintaanSurat->tanggal_permintaan->translatedFormat('d F Y') }}">
+                                                            onclick="loadRiwayatStatus({{ $surat->id }})"
+                                                            data-bs-toggle="modal" data-bs-target="#modalRiwayat">
                                                             <i class="bi bi-clock-history"></i><span>Riwayat</span>
                                                         </button>
-                                                        <!-- Preview Surat dengan Barcode -->
-                                                        @php
-                                                            $kodeSurat = $riwayat->jenisSurat->kode_surat;
-                                                            $permintaan = $riwayat->permintaanSurat;
-                                                        @endphp
 
+                                                        @if ($surat->status === 'Selesai' && $nomorSurat)
+                                                            <!-- Print Surat -->
+                                                            @php
+                                                                $kodeSurat = $surat->jenisSurat->kode_surat;
+                                                            @endphp
 
-                                                        <!-- Print Surat dengan Barcode -->
-                                                        @php
-                                                            $kodeSurat = $riwayat->jenisSurat->kode_surat;
-                                                            $permintaan = $riwayat->permintaanSurat;
-                                                        @endphp
+                                                            @switch($kodeSurat)
+                                                                @case('SKKM')
+                                                                    @if ($surat->suratKeteranganMeninggalDunia)
+                                                                        <a href="{{ route('skkm.print', $surat->suratKeteranganMeninggalDunia->id) }}"
+                                                                            class="btn btn-sm btn-success" title="Print Surat"
+                                                                            target="_blank">
+                                                                            <i class="bi bi-printer"></i>
+                                                                        </a>
+                                                                    @endif
+                                                                @break
 
-                                                        @switch($kodeSurat)
-                                                            @case('SKKM')
-                                                                @if ($permintaan->suratKeteranganMeninggalDunia)
-                                                                    <a href="{{ route('skkm.print', $permintaan->suratKeteranganMeninggalDunia->id) }}"
-                                                                        class="btn btn-sm btn-primary" title="Print Surat"
-                                                                        target="_blank">
-                                                                        <i class="bi bi-printer"></i> Print
-                                                                    </a>
-                                                                @endif
-                                                            @break
+                                                                @case('SKD')
+                                                                    @if ($surat->suratKeteranganDomisili)
+                                                                        <a href="{{ route('skd.print', $surat->suratKeteranganDomisili->id) }}"
+                                                                            class="btn btn-sm btn-success" title="Print Surat"
+                                                                            target="_blank">
+                                                                            <i class="bi bi-printer"></i>
+                                                                        </a>
+                                                                    @endif
+                                                                @break
 
-                                                            @case('SKD')
-                                                                @if ($permintaan->suratKeteranganDomisili)
-                                                                    <a href="{{ route('skd.print', $permintaan->suratKeteranganDomisili->id) }}"
-                                                                        class="btn btn-sm btn-primary" title="Print Surat"
-                                                                        target="_blank">
-                                                                        <i class="bi bi-printer"></i> Print
-                                                                    </a>
-                                                                @endif
-                                                            @break
+                                                                @case('SKU')
+                                                                    @if ($surat->suratKeteranganUsaha)
+                                                                        <a href="{{ route('sku.print', $surat->suratKeteranganUsaha->id) }}"
+                                                                            class="btn btn-sm btn-success" title="Print Surat"
+                                                                            target="_blank">
+                                                                            <i class="bi bi-printer"></i>
+                                                                        </a>
+                                                                    @endif
+                                                                @break
 
-                                                            @case('SKU')
-                                                                @if ($permintaan->suratKeteranganUsaha)
-                                                                    <a href="{{ route('sku.print', $permintaan->suratKeteranganUsaha->id) }}"
-                                                                        class="btn btn-sm btn-primary" title="Print Surat"
-                                                                        target="_blank">
-                                                                        <i class="bi bi-printer"></i> Print
-                                                                    </a>
-                                                                @endif
-                                                            @break
-
-                                                            @case('SKTM')
-                                                                @if ($permintaan->suratKeteranganTidakMampu)
-                                                                    <a href="{{ route('sktm.print', $permintaan->suratKeteranganTidakMampu->id) }}"
-                                                                        class="btn btn-sm btn-primary" title="Print Surat"
-                                                                        target="_blank">
-                                                                        <i class="bi bi-printer"></i> Print
-                                                                    </a>
-                                                                @endif
-                                                            @break
-
-                                                            @default
-                                                                <span class="text-muted">Jenis surat tidak dikenali</span>
-                                                        @endswitch
+                                                                @case('SKTM')
+                                                                    @if ($surat->suratKeteranganTidakMampu)
+                                                                        <a href="{{ route('sktm.print', $surat->suratKeteranganTidakMampu->id) }}"
+                                                                            class="btn btn-sm btn-success" title="Print Surat"
+                                                                            target="_blank">
+                                                                            <i class="bi bi-printer"></i>
+                                                                        </a>
+                                                                    @endif
+                                                                @break
+                                                            @endswitch
+                                                        @endif
                                                     </div>
                                                 </td>
                                             </tr>
                                             @empty
-                                                <tr>
-                                                    <td class="text-center" colspan="7">
-                                                        <div class="py-4">
-                                                            <i class="ri-shield-check-line"
-                                                                style="font-size: 48px; color: #ccc;"></i>
-                                                            <p class="text-muted mt-2">Belum ada surat yang terverifikasi</p>
-                                                            <a href="{{ route('verifikasi.index') }}"
-                                                                class="btn btn-outline-warning">
-                                                                <i class="ri-time-line"></i> Lihat Surat Menunggu Verifikasi
+                                                <tr id="emptyStateRow">
+                                                    <td colspan="7" class="text-center py-5">
+                                                        <div class="text-muted">
+                                                            <i class="bi bi-inbox display-6 d-block mb-2"></i>
+                                                            Belum ada riwayat pengajuan surat.
+                                                            <br><a href="{{ route('verifikasi.index') }}"
+                                                                class="btn btn-sm btn-outline-primary mt-2">
+                                                                <i class="bi bi-plus-circle"></i> Ajukan Surat Baru
                                                             </a>
                                                         </div>
                                                     </td>
@@ -296,10 +305,18 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <p><strong>Jenis Surat:</strong> <span id="jenisSurat"></span></p>
-                        <p><strong>Tanggal Permintaan:</strong> <span id="tanggalPermintaan"></span></p>
-                        <p><strong>Nomor Surat:</strong> <span id="nomorSurat"></span></p>
-                        <p><strong>Status Saat Ini:</strong> <span id="statusSurat"></span></p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Jenis Surat:</strong><br><span id="jenisSurat" class="text-muted"></span></p>
+                                <p><strong>Tanggal Permintaan:</strong><br><span id="tanggalPermintaan"
+                                        class="text-muted"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Nomor Surat:</strong><br><span id="nomorSurat" class="text-muted"></span></p>
+                                <p><strong>Status Saat Ini:</strong><br><span id="statusSurat" class="text-muted"></span></p>
+                                <p><strong>Bagian:</strong><br><span id="bagianSurat" class="text-muted"></span></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -314,78 +331,111 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Bagian</th>
-                                    <th>Status</th>
-                                    <th>Keterangan</th>
-                                    <th>Tanggal Proses</th>
-                                </tr>
-                            </thead>
-                            <tbody id="riwayatStatusBody"></tbody>
-                        </table>
+                        <div id="riwayatLoading" class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Memuat riwayat status...</p>
+                        </div>
+                        <div id="riwayatContent" style="display: none;">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th width="50">No</th>
+                                        <th>Bagian</th>
+                                        <th width="120">Status</th>
+                                        <th>Keterangan</th>
+                                        <th width="140">Tanggal Proses</th>
+                                        <th width="120">Petugas</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="riwayatStatusBody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <script>
-            const bagianList = ['Tata Usaha', 'Sekretaris Nagari', 'Wali Nagari'];
-
+            // Modal Detail Handler
             const modalDetail = document.getElementById('modalDetail');
             modalDetail.addEventListener('show.bs.modal', function(event) {
                 const button = event.relatedTarget;
                 document.getElementById('jenisSurat').textContent = button.getAttribute('data-jenis');
                 document.getElementById('tanggalPermintaan').textContent = button.getAttribute('data-tanggal');
-                document.getElementById('nomorSurat').textContent = button.getAttribute('data-nomor');
+                document.getElementById('nomorSurat').textContent = button.getAttribute('data-nomor') ||
+                    'Belum diproses';
                 document.getElementById('statusSurat').textContent = button.getAttribute('data-status');
+                document.getElementById('bagianSurat').textContent = button.getAttribute('data-bagian') || 'Tata Usaha';
             });
 
-            const modalRiwayat = document.getElementById('modalRiwayat');
-            modalRiwayat.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const bagianSaatIni = button.getAttribute('data-bagian');
-                const tanggalPermintaan = button.getAttribute('data-tanggal');
-                const statusSurat = button.closest('tr').querySelector('[data-status]').getAttribute('data-status');
+            // Load Riwayat Status via AJAX
+            function loadRiwayatStatus(permintaanSuratId) {
+                const loading = document.getElementById('riwayatLoading');
+                const content = document.getElementById('riwayatContent');
                 const tbody = document.getElementById('riwayatStatusBody');
+
+                // Show loading
+                loading.style.display = 'block';
+                content.style.display = 'none';
                 tbody.innerHTML = '';
 
-                bagianList.forEach((bagian, index) => {
-                    let status = 'Menunggu';
+                // Fetch data
+                fetch(`/riwayat-surat/${permintaanSuratId}/status`)
+                    .then(response => response.json())
+                    .then(data => {
+                        loading.style.display = 'none';
+                        content.style.display = 'block';
 
-                    // Jika surat sudah selesai, maka semua bagian selesai
-                    if (statusSurat === 'Selesai') {
-                        status = 'Selesai';
-                    } else if (bagian === bagianSaatIni) {
-                        status = 'Sedang Diproses';
-                    } else if (index < bagianList.indexOf(bagianSaatIni)) {
-                        status = 'Selesai';
-                    }
+                        data.riwayat_status.forEach((item, index) => {
+                            let badgeClass = 'secondary';
+                            let iconClass = 'bi-clock';
 
-                    let keterangan = {
-                        'Selesai': 'Proses telah selesai',
-                        'Sedang Diproses': 'Sedang dalam proses verifikasi',
-                        'Menunggu': 'Menunggu proses sebelumnya selesai'
-                    } [status];
+                            switch (item.status) {
+                                case 'Selesai':
+                                    badgeClass = 'success';
+                                    iconClass = 'bi-check-circle';
+                                    break;
+                                case 'Sedang Diproses':
+                                    badgeClass = 'warning';
+                                    iconClass = 'bi-hourglass-split';
+                                    break;
+                                case 'Ditolak':
+                                    badgeClass = 'danger';
+                                    iconClass = 'bi-x-circle';
+                                    break;
+                            }
 
-                    let badgeClass = {
-                        'Selesai': 'success',
-                        'Sedang Diproses': 'warning',
-                        'Menunggu': 'secondary'
-                    } [status];
+                            const row = `<tr>
+                                <td class="text-center">${index + 1}</td>
+                                <td><strong>${item.bagian}</strong></td>
+                                <td>
+                                    <span class="badge bg-${badgeClass}">
+                                        <i class="bi ${iconClass}"></i> ${item.status}
+                                    </span>
+                                </td>
+                                <td><small>${item.keterangan}</small></td>
+                                <td><small>${item.tanggal_proses || '-'}</small></td>
+                                <td><small>${item.petugas}</small></td>
+                            </tr>`;
 
-                    const row = `<tr>
-            <td>${index + 1}</td>
-            <td>${bagian}</td>
-            <td><span class="badge bg-${badgeClass}">${status}</span></td>
-            <td>${keterangan}</td>
-            <td>${status === 'Selesai' ? tanggalPermintaan : '-'}</td>
-        </tr>`;
+                            tbody.insertAdjacentHTML('beforeend', row);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        loading.style.display = 'none';
+                        content.style.display = 'block';
+                        tbody.innerHTML =
+                            '<tr><td colspan="6" class="text-center text-danger">Error memuat data riwayat</td></tr>';
+                    });
+            }
 
-                    tbody.insertAdjacentHTML('beforeend', row);
-                });
+            // Reset modal saat ditutup
+            document.getElementById('modalRiwayat').addEventListener('hidden.bs.modal', function() {
+                document.getElementById('riwayatLoading').style.display = 'block';
+                document.getElementById('riwayatContent').style.display = 'none';
             });
         </script>
 

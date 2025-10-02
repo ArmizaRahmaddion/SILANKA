@@ -243,13 +243,45 @@
                             <hr>
 
                             {{-- Tombol Aksi --}}
-                            <div class="mt-4 d-flex justify-content-end gap-2">
+                            <div class="mt-4 d-flex justify-content-end gap-2 align-items-center">
                                 <a href="{{ route('permintaan.surat') }}" class="btn btn-secondary">Batal</a>
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-save"></i> Simpan Surat
                                 </button>
+                                <!-- Tombol Tolak Surat -->
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#tolakSuratModal">Tolak Surat</button>
                             </div>
                         </form>
+
+                        <!-- Modal Tolak Surat -->
+                        <div class="modal fade" id="tolakSuratModal" tabindex="-1"
+                            aria-labelledby="tolakSuratModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form action="{{ route('permintaan-surat.tolak', $permintaan->id) }}" method="POST">
+                                        @csrf
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="tolakSuratModalLabel">Tolak Permintaan Surat</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="alasanTolak" class="form-label">Alasan Penolakan <span
+                                                        class="text-danger">*</span></label>
+                                                <textarea name="alasan" id="alasanTolak" class="form-control" rows="3" required></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn btn-danger">Kirim Penolakan</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div> {{-- end card-body --}}
                 </div> {{-- end card --}}
             </div>
